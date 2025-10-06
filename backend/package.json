@@ -1,7 +1,7 @@
 {
   "name": "mini-community",
   "version": "1.0.0",
-  "description": "",
+  "description": "Project backend.",
   "main": "server.js",
   "type": "module",
   "scripts": {
