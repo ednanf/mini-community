@@ -2,9 +2,6 @@
 .DS_Store
 
 # IDE settings
-.github/
-.idea/
-.vscode/
 *.suo
 *.ntvs*
 *.njsproj
