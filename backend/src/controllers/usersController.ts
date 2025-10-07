@@ -1,15 +1,18 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import User, { IUserDocument } from '../models/User';
+import comparePasswords from '../utils/comparePasswords';
+import { BadRequestError, NotFoundError, UnauthorizedError } from '../errors';
 import {
     ApiResponse,
     UserRegisterSuccess,
     UserLoginBody,
     UserRegisterBody,
     UserLoginSuccess,
+    UserPatchBody,
+    UserPatchSuccess,
 } from '../types/api';
-import { BadRequestError, UnauthorizedError } from '../errors';
-import comparePasswords from '../utils/comparePasswords';
+import { AuthenticatedRequest } from '../types/express';
 
 const registerUser = async (req: Request, res: Response, next: NextFunction) => {
     const { email, password }: UserRegisterBody = req.body;
@@ -63,8 +66,34 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const patchUser = (req: Request, res: Response, next: NextFunction) => {
-    res.status(StatusCodes.OK).json({ msg: 'patch user hit' });
+const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const { userId } = req.user;
+    const updatePayload: UserPatchBody = req.body;
+    if (Object.keys(updatePayload).length === 0) {
+        next(new BadRequestError('No valid update data provided.'));
+        return;
+    }
+    try {
+        const patchedUser = await User.findByIdAndUpdate({ _id: userId }, updatePayload, {
+            new: true,
+            runValidators: true,
+        });
+        if (!patchedUser) {
+            new NotFoundError('User was not found.');
+        }
+        const response: ApiResponse<UserPatchSuccess> = {
+            status: 'success',
+            data: {
+                message: 'User updated successfully.',
+                email: patchedUser.email,
+                bio: patchedUser.bio,
+                avatarUrl: patchedUser.avatarUrl,
+            },
+        };
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
 };
 
 const logoutUser = (req: Request, res: Response, next: NextFunction) => {

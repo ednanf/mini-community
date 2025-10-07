@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { userLoginSchema, userRegisterSchema } from '../schemas/userSchemas';
+import { userLoginSchema, userPatchSchema, userRegisterSchema } from '../schemas/userSchemas';
 
 /*
  * Generic types
@@ -29,6 +29,8 @@ export type UserRegisterBody = z.infer<typeof userRegisterSchema>;
 
 export type UserLoginBody = z.infer<typeof userLoginSchema>;
 
+export type UserPatchBody = z.infer<typeof userPatchSchema>;
+
 export interface UserBase {
     message: string;
     email: string;
@@ -40,4 +42,9 @@ export interface UserRegisterSuccess extends UserBase {
 
 export interface UserLoginSuccess extends UserBase {
     token: string;
+}
+
+export interface UserPatchSuccess extends UserBase {
+    avatarUrl?: string;
+    bio?: string;
 }
