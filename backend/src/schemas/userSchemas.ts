@@ -2,9 +2,9 @@ import { z } from 'zod';
 
 const userBaseSchema = z.object({
     avatarUrl: z.string().max(2048, { message: 'URL must contain a maximum of 2048 characters.' }),
-    bio: z.string().max(280, { message: 'The bio must contain a maximum of 280 characters.' }),
+    bio: z.string().max(280, { message: 'Bio must contain a maximum of 280 characters.' }),
     email: z.email(),
-    password: z.string().min(8),
+    password: z.string().min(6),
 });
 
 const userRegisterSchema = userBaseSchema
