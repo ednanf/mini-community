@@ -11,6 +11,7 @@ import {
     UserLoginSuccess,
     UserPatchBody,
     UserPatchSuccess,
+    UserLogoutSuccess,
 } from '../types/api';
 import { AuthenticatedRequest } from '../types/express';
 
@@ -96,8 +97,14 @@ const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFun
     }
 };
 
-const logoutUser = (req: Request, res: Response, next: NextFunction) => {
-    res.status(StatusCodes.OK).json({ msg: 'logout user hit' });
+const logoutUser = (_req: Request, res: Response) => {
+    const response: ApiResponse<UserLogoutSuccess> = {
+        status: 'success',
+        data: {
+            message: 'Good bye!',
+        },
+    };
+    res.status(StatusCodes.OK).json(response);
 };
 
 const deleteUser = (req: Request, res: Response, next: NextFunction) => {

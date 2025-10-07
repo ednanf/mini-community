@@ -48,3 +48,7 @@ export interface UserPatchSuccess extends UserBase {
     avatarUrl?: string;
     bio?: string;
 }
+
+export interface UserLogoutSuccess {
+    message: string;
+}
