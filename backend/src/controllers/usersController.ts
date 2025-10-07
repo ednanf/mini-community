@@ -1,18 +1,26 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import User, { IUserDocument } from '../models/User';
-import { ApiResponse, RegisterUserSuccess } from '../types/api';
+import {
+    ApiResponse,
+    UserRegisterSuccess,
+    UserLoginBody,
+    UserRegisterBody,
+    UserLoginSuccess,
+} from '../types/api';
+import { BadRequestError, UnauthorizedError } from '../errors';
+import comparePasswords from '../utils/comparePasswords';
 
 const registerUser = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
+    const { email, password }: UserRegisterBody = req.body;
     try {
         const newUser: IUserDocument = await User.create({ email, password });
         const token = await newUser.createJWT();
-        const response: ApiResponse<RegisterUserSuccess> = {
+        const response: ApiResponse<UserRegisterSuccess> = {
             status: 'success',
             data: {
                 message: 'User registered successfully.',
-                user: newUser.email,
+                email: newUser.email,
                 token,
             },
         };
@@ -22,8 +30,37 @@ const registerUser = async (req: Request, res: Response, next: NextFunction) => 
     }
 };
 
-const loginUser = (req: Request, res: Response, next: NextFunction) => {
-    res.status(StatusCodes.OK).json({ msg: 'login user hit' });
+const loginUser = async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password }: UserLoginBody = req.body;
+    if (!email || !password) {
+        next(new BadRequestError('Email and password are required'));
+        return;
+    }
+    try {
+        // .select('+password') includes password field for verification
+        const candidateUser = await User.findOne<IUserDocument>({ email }).select('+password');
+        if (!candidateUser) {
+            next(new UnauthorizedError('There is an issue with your email or password'));
+            return;
+        }
+        const isPasswordValid = await comparePasswords(password, candidateUser.password);
+        if (!isPasswordValid) {
+            next(new UnauthorizedError('There is an issue with your email or password.'));
+            return;
+        }
+        const token = await candidateUser.createJWT();
+        const response: ApiResponse<UserLoginSuccess> = {
+            status: 'success',
+            data: {
+                message: 'Log in successful. Welcome back!',
+                email: candidateUser.email,
+                token,
+            },
+        };
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
 };
 
 const patchUser = (req: Request, res: Response, next: NextFunction) => {

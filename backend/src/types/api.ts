@@ -1,10 +1,17 @@
-// Generic API responses
+import { z } from 'zod';
+import { userLoginSchema, userRegisterSchema } from '../schemas/userSchemas';
+
+/*
+ * Generic types
+ * **/
 export interface ApiResponse<T = never> {
     status: 'success' | 'error';
     data: T;
 }
 
-// Error types
+/*
+ * Error-related types
+ * **/
 export interface ApiError {
     message: string;
 }
@@ -14,9 +21,23 @@ export interface MongoDatabaseError {
     message: string;
 }
 
-// User API responses
-export interface RegisterUserSuccess {
+/*
+ * User-related types
+ * **/
+// Use zod schema to infer the type (more consistent)
+export type UserRegisterBody = z.infer<typeof userRegisterSchema>;
+
+export type UserLoginBody = z.infer<typeof userLoginSchema>;
+
+export interface UserBase {
     message: string;
-    user: string;
+    email: string;
+}
+
+export interface UserRegisterSuccess extends UserBase {
+    token: string;
+}
+
+export interface UserLoginSuccess extends UserBase {
     token: string;
 }
