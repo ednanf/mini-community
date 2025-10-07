@@ -1,12 +1,27 @@
 import { z } from 'zod';
 
-const registerUserSchema = z.object({
-  email: z.email({ message: 'Email must contain only valid characters.' }),
-  password: z
-    .string({ message: 'Password must contain only valid characters.' })
-    .min(6, { message: 'Password must contain at least 6 characters.' }),
+const userBaseSchema = z.object({
+    avatarUrl: z.string().max(2048, { message: 'URL must contain a maximum of 2048 characters.' }),
+    bio: z.string().max(280, { message: 'The bio must contain a maximum of 280 characters.' }),
+    email: z.email(),
+    password: z.string().min(8),
 });
 
-const loginUserSchema = registerUserSchema;
+const userRegisterSchema = userBaseSchema
+    .pick({
+        email: true,
+        password: true,
+    })
+    .extend({
+        avatarUrl: userBaseSchema.shape.avatarUrl.optional(),
+        bio: userBaseSchema.shape.bio.optional(),
+    });
 
-export { registerUserSchema, loginUserSchema };
+const userLoginSchema = userBaseSchema.pick({
+    email: true,
+    password: true,
+});
+
+const userPatchSchema = userBaseSchema.partial();
+
+export { userRegisterSchema, userLoginSchema, userPatchSchema };
