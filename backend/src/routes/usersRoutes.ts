@@ -1,5 +1,10 @@
 import express, { RequestHandler } from 'express';
-import { patchUser, deleteUser, getUserById } from '../controllers/usersControllers';
+import {
+    patchUser,
+    deleteUser,
+    getUserById,
+    getUserFollowers,
+} from '../controllers/usersControllers';
 import { xss } from 'express-xss-sanitizer';
 import authenticate from '../middlewares/authenticate';
 import validateWithZod from '../middlewares/validateWithZod';
@@ -16,5 +21,6 @@ router.patch(
     patchUser as RequestHandler,
 );
 router.delete('/me', authenticate, deleteUser as RequestHandler);
+router.get('/me/followers', authenticate, getUserFollowers as RequestHandler);
 
 export default router;

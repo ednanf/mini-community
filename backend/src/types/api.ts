@@ -31,6 +31,7 @@ export type UserLoginBody = z.infer<typeof userLoginSchema>;
 
 export interface UserBase {
     message: string;
+    nickname: string;
     email: string;
 }
 
@@ -68,4 +69,19 @@ export interface UserPatchSuccess extends UserBase {
     bio?: string;
 }
 
-export type UserDeleteSuccess = UserBase;
+export interface UserDeleteSuccess {
+    message: string;
+    email: string;
+}
+
+export interface UserPublic {
+    id: string;
+    email: string;
+    avatarUrl?: string;
+    bio?: string;
+}
+
+export interface UserGetFollowersSuccess {
+    message: string;
+    followers: UserPublic[];
+}

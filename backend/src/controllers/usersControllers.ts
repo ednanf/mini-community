@@ -4,11 +4,13 @@ import {
     ApiResponse,
     UserDeleteSuccess,
     UserGetByIdSuccess,
+    UserGetFollowersSuccess,
     UserPatchBody,
     UserPatchSuccess,
+    UserPublic,
 } from '../types/api';
 import { BadRequestError, NotFoundError } from '../errors';
-import User from '../models/User';
+import User, { IUser } from '../models/User';
 import { StatusCodes } from 'http-status-codes';
 
 const getUserById = async (req: Request, res: Response, next: NextFunction) => {
@@ -28,6 +30,7 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
             data: {
                 message: 'User fetched successfully.',
                 id: user._id.toString(),
+                nickname: user.nickname,
                 email: user.email,
                 bio: user.bio,
                 avatarUrl: user.avatarUrl,
@@ -60,6 +63,7 @@ const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFun
             status: 'success',
             data: {
                 message: 'User updated successfully.',
+                nickname: patchedUser.nickname,
                 email: patchedUser.email,
                 bio: patchedUser.bio,
                 avatarUrl: patchedUser.avatarUrl,
@@ -96,4 +100,31 @@ const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFu
     res.status(StatusCodes.OK).json({ msg: 'delete user hit' });
 };
 
-export { getUserById, patchUser, deleteUser };
+const getUserFollowers = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const { userId } = req.user;
+    try {
+        const user = await User.findById(userId).select('followers').populate('followers');
+        if (!user) {
+            next(new NotFoundError('User was not found.'));
+            return;
+        }
+        const followersData: UserPublic[] = user.followers.map((follower: IUser) => ({
+            id: follower._id.toString(),
+            email: follower.email,
+            avatarUrl: follower.avatarUrl,
+            bio: follower.bio,
+        }));
+        const response: ApiResponse<UserGetFollowersSuccess> = {
+            status: 'success',
+            data: {
+                message: 'Followers fetched successfully.',
+                followers: followersData,
+            },
+        };
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export { getUserById, patchUser, deleteUser, getUserFollowers };

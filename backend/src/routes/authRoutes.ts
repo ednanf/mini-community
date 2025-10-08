@@ -9,7 +9,6 @@ const router = express.Router();
 
 router.post('/register', xss(), validateWithZod(userRegisterSchema), registerUser);
 router.post('/login', xss(), validateWithZod(userLoginSchema), loginUser);
-
 router.post('/logout', logoutUser);
 router.get('/me', authenticate, me as RequestHandler);
 

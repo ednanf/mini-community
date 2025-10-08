@@ -23,6 +23,7 @@ const registerUser = async (req: Request, res: Response, next: NextFunction) => 
             status: 'success',
             data: {
                 message: 'User registered successfully.',
+                nickname: newUser.nickname,
                 email: newUser.email,
                 token,
             },
@@ -56,6 +57,7 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
             status: 'success',
             data: {
                 message: 'Log in successful. Welcome back!',
+                nickname: candidateUser.nickname,
                 email: candidateUser.email,
                 token,
             },
@@ -89,6 +91,7 @@ const me = async (req: AuthenticatedRequest, res: Response, next: NextFunction) 
             data: {
                 message: 'User retrieved successfuly',
                 id: user._id.toString(),
+                nickname: user?.nickname,
                 email: user?.email,
             },
         };

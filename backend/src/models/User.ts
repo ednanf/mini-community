@@ -8,6 +8,8 @@ import ObjectId = module;
 
 // TypeScript interface (when just passing user data around)
 export interface IUser {
+    _id: ObjectId;
+    nickname: string;
     email: string;
     password: string;
     avatarUrl?: string;
@@ -26,6 +28,15 @@ export interface IUserDocument extends IUser, HydratedDocument<IUser> {
 
 const userSchema = new Schema<IUserDocument>(
     {
+        nickname: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true,
+            lowercase: true,
+            minlength: [3, 'Nickname must be at least 3 characters long.'],
+            maxlength: [30, 'Nickname must be at most 30 characters long.'],
+        },
         email: {
             type: String,
             required: true,

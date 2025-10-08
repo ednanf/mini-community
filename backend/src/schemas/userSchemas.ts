@@ -5,10 +5,12 @@ const userBaseSchema = z.object({
     bio: z.string().max(280, { message: 'Bio must contain a maximum of 280 characters.' }),
     email: z.email(),
     password: z.string().min(6),
+    nickname: z.string().min(3).max(10),
 });
 
 const userRegisterSchema = userBaseSchema
     .pick({
+        nickname: true,
         email: true,
         password: true,
     })
