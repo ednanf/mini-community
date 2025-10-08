@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import { userLoginSchema, userPatchSchema, userRegisterSchema } from '../schemas/userSchemas';
-import { Schema } from 'mongoose';
 
 /*
  * Generic types
@@ -60,6 +59,8 @@ export interface UserGetByIdSuccess extends UserBase {
     id: string;
     avatarUrl?: string;
     bio?: string;
+    followersCount: number;
+    followingCount: number;
 }
 
 export interface UserPatchSuccess extends UserBase {

@@ -14,7 +14,9 @@ import { StatusCodes } from 'http-status-codes';
 const getUserById = async (req: Request, res: Response, next: NextFunction) => {
     const { id: userId } = req.params;
     try {
-        const user = await User.findById({ _id: userId }).select('email bio avatarUrl');
+        const user = await User.findById({ _id: userId }).select(
+            'email bio avatarUrl followers following',
+        );
         if (!user) {
             next(new NotFoundError('User was not found.'));
             return;
@@ -29,6 +31,8 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
                 email: user.email,
                 bio: user.bio,
                 avatarUrl: user.avatarUrl,
+                followersCount: user.followers.length,
+                followingCount: user.following.length,
             },
         };
         res.status(StatusCodes.OK).json(response);
