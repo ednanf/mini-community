@@ -35,6 +35,8 @@ const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFun
     }
 };
 
-const deleteUser = (req: Request, res: Response, next: NextFunction) => {
+const deleteUser = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     res.status(StatusCodes.OK).json({ msg: 'delete user hit' });
 };
+
+export { patchUser, deleteUser };

@@ -1,7 +1,8 @@
 import express from 'express';
 import morgan from 'morgan';
 
-import userRoutes from './routes/authRoutes';
+import authRoutes from './routes/authRoutes';
+import usersRoutes from './routes/usersRoutes';
 import errorHandler from './middlewares/errorHandler';
 
 const app = express();
@@ -11,7 +12,8 @@ app.use(express.json());
 app.use(morgan('tiny'));
 
 // Routes
-app.use('/api/v1/auth', userRoutes);
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/users', usersRoutes);
 
 // Errors
 app.use(errorHandler);
