@@ -17,7 +17,7 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
     const { id: userId } = req.params;
     try {
         const user = await User.findById({ _id: userId }).select(
-            'email bio avatarUrl followers following',
+            'nickname email bio avatarUrl followers following',
         );
         if (!user) {
             next(new NotFoundError('User was not found.'));
