@@ -4,6 +4,9 @@ import {
     deleteUser,
     getUserById,
     getUserFollowers,
+    getUserFollowing,
+    followUser,
+    unfollowUser,
 } from '../controllers/usersControllers';
 import { xss } from 'express-xss-sanitizer';
 import authenticate from '../middlewares/authenticate';
@@ -21,6 +24,9 @@ router.patch(
     patchUser as RequestHandler,
 );
 router.delete('/me', authenticate, deleteUser as RequestHandler);
-router.get('/me/followers', authenticate, getUserFollowers as RequestHandler);
+router.get('/:id/followers', authenticate, getUserFollowers);
+router.get('/:id/following', authenticate, getUserFollowing);
+router.post('/:id/follow', authenticate, followUser as RequestHandler);
+router.post('/:id/unfollow', authenticate, unfollowUser as RequestHandler);
 
 export default router;

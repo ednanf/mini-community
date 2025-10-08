@@ -100,8 +100,8 @@ const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFu
     res.status(StatusCodes.OK).json({ msg: 'delete user hit' });
 };
 
-const getUserFollowers = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const { userId } = req.user;
+const getUserFollowers = async (req: Request, res: Response, next: NextFunction) => {
+    const { id: userId } = req.params;
     try {
         const user = await User.findById(userId).select('followers').populate('followers');
         if (!user) {
@@ -127,4 +127,24 @@ const getUserFollowers = async (req: AuthenticatedRequest, res: Response, next: 
     }
 };
 
-export { getUserById, patchUser, deleteUser, getUserFollowers };
+const getUserFollowing = async (req: Request, res: Response, next: NextFunction) => {
+    res.status(200).json({ msg: 'get user following hit' });
+};
+
+const followUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    res.status(200).json({ msg: 'follow user hit' });
+};
+
+const unfollowUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    res.status(200).json({ msg: 'unfollow user hit' });
+};
+
+export {
+    getUserById,
+    patchUser,
+    deleteUser,
+    getUserFollowers,
+    getUserFollowing,
+    followUser,
+    unfollowUser,
+};
