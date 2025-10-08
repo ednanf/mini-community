@@ -1,6 +1,6 @@
 import { AuthenticatedRequest } from '../types/express';
-import { NextFunction, Request, Response } from 'express';
-import { ApiResponse, UserPatchBody, UserPatchSuccess } from '../types/api';
+import { NextFunction, Response } from 'express';
+import { ApiResponse, UserDeleteSuccess, UserPatchBody, UserPatchSuccess } from '../types/api';
 import { BadRequestError, NotFoundError } from '../errors';
 import User from '../models/User';
 import { StatusCodes } from 'http-status-codes';
@@ -35,7 +35,28 @@ const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFun
     }
 };
 
-const deleteUser = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const { userId } = req.user;
+    try {
+        // TODO: Also delete all posts, comments, likes, followers, following, etc. as exemplified below
+        // await Category.deleteMany({ createdBy: userId });
+        // await Transaction.deleteMany({ createdBy: userId });
+        const userToBeDeleted = await User.findByIdAndDelete(userId);
+        if (!userToBeDeleted) {
+            new NotFoundError('User was not found.');
+            return;
+        }
+        const response: ApiResponse<UserDeleteSuccess> = {
+            status: 'success',
+            data: {
+                message: 'User deleted successfully.',
+                email: userToBeDeleted.email,
+            },
+        };
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
     res.status(StatusCodes.OK).json({ msg: 'delete user hit' });
 };
 

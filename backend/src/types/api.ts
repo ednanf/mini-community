@@ -42,7 +42,11 @@ export interface UserLoginSuccess extends UserBase {
     token: string;
 }
 
-export interface UserMeSuccess extends UserBase {}
+export interface UserLogoutSuccess {
+    message: string;
+}
+
+export type UserMeSuccess = UserBase;
 
 /*
  * User types
@@ -54,6 +58,4 @@ export interface UserPatchSuccess extends UserBase {
     bio?: string;
 }
 
-export interface UserLogoutSuccess {
-    message: string;
-}
+export type UserDeleteSuccess = UserBase;
