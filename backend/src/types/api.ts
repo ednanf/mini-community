@@ -10,7 +10,7 @@ export interface ApiResponse<T = never> {
 }
 
 /*
- * Error-related types
+ * Error types
  * **/
 export interface ApiError {
     message: string;
@@ -21,15 +21,13 @@ export interface MongoDatabaseError {
     message: string;
 }
 
-/*
- * User-related types
- * **/
+/**
+ * User authentication types
+ * */
 // Use zod schema to infer the type (more consistent)
 export type UserRegisterBody = z.infer<typeof userRegisterSchema>;
 
 export type UserLoginBody = z.infer<typeof userLoginSchema>;
-
-export type UserPatchBody = z.infer<typeof userPatchSchema>;
 
 export interface UserBase {
     message: string;
@@ -43,6 +41,13 @@ export interface UserRegisterSuccess extends UserBase {
 export interface UserLoginSuccess extends UserBase {
     token: string;
 }
+
+export interface UserMeSuccess extends UserBase {}
+
+/*
+ * User types
+ * **/
+export type UserPatchBody = z.infer<typeof userPatchSchema>;
 
 export interface UserPatchSuccess extends UserBase {
     avatarUrl?: string;

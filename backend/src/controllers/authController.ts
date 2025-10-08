@@ -2,16 +2,15 @@ import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import User, { IUserDocument } from '../models/User';
 import comparePasswords from '../utils/comparePasswords';
-import { BadRequestError, NotFoundError, UnauthorizedError } from '../errors';
+import { BadRequestError, UnauthenticatedError, UnauthorizedError } from '../errors';
 import {
     ApiResponse,
     UserRegisterSuccess,
     UserLoginBody,
     UserRegisterBody,
     UserLoginSuccess,
-    UserPatchBody,
-    UserPatchSuccess,
     UserLogoutSuccess,
+    UserMeSuccess,
 } from '../types/api';
 import { AuthenticatedRequest } from '../types/express';
 
@@ -67,36 +66,6 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const { userId } = req.user;
-    const updatePayload: UserPatchBody = req.body;
-    if (Object.keys(updatePayload).length === 0) {
-        next(new BadRequestError('No valid update data provided.'));
-        return;
-    }
-    try {
-        const patchedUser = await User.findByIdAndUpdate({ _id: userId }, updatePayload, {
-            new: true,
-            runValidators: true,
-        });
-        if (!patchedUser) {
-            new NotFoundError('User was not found.');
-        }
-        const response: ApiResponse<UserPatchSuccess> = {
-            status: 'success',
-            data: {
-                message: 'User updated successfully.',
-                email: patchedUser.email,
-                bio: patchedUser.bio,
-                avatarUrl: patchedUser.avatarUrl,
-            },
-        };
-        res.status(StatusCodes.OK).json(response);
-    } catch (error) {
-        next(error);
-    }
-};
-
 const logoutUser = (_req: Request, res: Response) => {
     const response: ApiResponse<UserLogoutSuccess> = {
         status: 'success',
@@ -107,8 +76,25 @@ const logoutUser = (_req: Request, res: Response) => {
     res.status(StatusCodes.OK).json(response);
 };
 
-const deleteUser = (req: Request, res: Response, next: NextFunction) => {
-    res.status(StatusCodes.OK).json({ msg: 'delete user hit' });
+const me = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    const { userId } = req.user;
+    try {
+        const user: IUserDocument | null = await User.findById(userId);
+        if (!user) {
+            next(new UnauthenticatedError('User is not authenticated.'));
+            return;
+        }
+        const response: ApiResponse<UserMeSuccess> = {
+            status: 'success',
+            data: {
+                message: 'User retrieved successfuly',
+                email: user?.email,
+            },
+        };
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
 };
 
-export { registerUser, loginUser, patchUser, logoutUser, deleteUser };
+export { registerUser, loginUser, logoutUser, me };

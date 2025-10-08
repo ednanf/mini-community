@@ -3,6 +3,8 @@ import validator from 'validator';
 import hashPassword from '../utils/hashPassword';
 import createJWT from '../utils/createJWT';
 import comparePasswords from '../utils/comparePasswords';
+import ObjectId = module;
+import module from 'node:module';
 
 // TypeScript interface (when just passing user data around)
 export interface IUser {
@@ -10,6 +12,8 @@ export interface IUser {
     password: string;
     avatarUrl?: string;
     bio?: string;
+    followers: ObjectId[];
+    following: ObjectId[];
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -58,6 +62,14 @@ const userSchema = new Schema<IUserDocument>(
             required: false,
             trim: true,
             maxlength: [280, 'Bio must contain 280 characters or less.'],
+        },
+        followers: {
+            type: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+            default: [],
+        },
+        following: {
+            type: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+            default: [],
         },
     },
     { timestamps: true },
