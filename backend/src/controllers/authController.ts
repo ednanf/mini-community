@@ -88,6 +88,7 @@ const me = async (req: AuthenticatedRequest, res: Response, next: NextFunction) 
             status: 'success',
             data: {
                 message: 'User retrieved successfuly',
+                id: user._id.toString(),
                 email: user?.email,
             },
         };

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { userLoginSchema, userPatchSchema, userRegisterSchema } from '../schemas/userSchemas';
+import { Schema } from 'mongoose';
 
 /*
  * Generic types
@@ -46,12 +47,20 @@ export interface UserLogoutSuccess {
     message: string;
 }
 
-export type UserMeSuccess = UserBase;
+export interface UserMeSuccess extends UserBase {
+    id: string;
+}
 
 /*
  * User types
  * **/
 export type UserPatchBody = z.infer<typeof userPatchSchema>;
+
+export interface UserGetByIdSuccess extends UserBase {
+    id: string;
+    avatarUrl?: string;
+    bio?: string;
+}
 
 export interface UserPatchSuccess extends UserBase {
     avatarUrl?: string;

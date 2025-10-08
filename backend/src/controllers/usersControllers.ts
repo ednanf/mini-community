@@ -1,9 +1,41 @@
 import { AuthenticatedRequest } from '../types/express';
-import { NextFunction, Response } from 'express';
-import { ApiResponse, UserDeleteSuccess, UserPatchBody, UserPatchSuccess } from '../types/api';
+import { NextFunction, Response, Request } from 'express';
+import {
+    ApiResponse,
+    UserDeleteSuccess,
+    UserGetByIdSuccess,
+    UserPatchBody,
+    UserPatchSuccess,
+} from '../types/api';
 import { BadRequestError, NotFoundError } from '../errors';
 import User from '../models/User';
 import { StatusCodes } from 'http-status-codes';
+
+const getUserById = async (req: Request, res: Response, next: NextFunction) => {
+    const { id: userId } = req.params;
+    try {
+        const user = await User.findById({ _id: userId }).select('email bio avatarUrl');
+        if (!user) {
+            next(new NotFoundError('User was not found.'));
+            return;
+        }
+        // TODO: also fetch user's posts - to be created later
+        // TODO: update UserGetByIdSuccess type to include posts
+        const response: ApiResponse<UserGetByIdSuccess> = {
+            status: 'success',
+            data: {
+                message: 'User fetched successfully.',
+                id: user._id.toString(),
+                email: user.email,
+                bio: user.bio,
+                avatarUrl: user.avatarUrl,
+            },
+        };
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
+};
 
 const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { userId } = req.user;
@@ -60,4 +92,4 @@ const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFu
     res.status(StatusCodes.OK).json({ msg: 'delete user hit' });
 };
 
-export { patchUser, deleteUser };
+export { getUserById, patchUser, deleteUser };

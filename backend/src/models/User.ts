@@ -3,8 +3,8 @@ import validator from 'validator';
 import hashPassword from '../utils/hashPassword';
 import createJWT from '../utils/createJWT';
 import comparePasswords from '../utils/comparePasswords';
-import ObjectId = module;
 import module from 'node:module';
+import ObjectId = module;
 
 // TypeScript interface (when just passing user data around)
 export interface IUser {
