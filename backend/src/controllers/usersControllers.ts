@@ -14,7 +14,6 @@ import {
 import { BadRequestError, NotFoundError } from '../errors';
 import User, { IUser } from '../models/User';
 import { StatusCodes } from 'http-status-codes';
-// Correctly import ObjectId from mongoose
 import { Types } from 'mongoose';
 
 const getUserById = async (req: Request, res: Response, next: NextFunction) => {
@@ -54,8 +53,6 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
         next(error);
     }
 };
-
-// ... The rest of your controllers
 
 const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { userId } = req.user;
