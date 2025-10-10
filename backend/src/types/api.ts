@@ -62,6 +62,7 @@ export interface UserGetByIdSuccess extends UserBase {
     bio?: string;
     followersCount: number;
     followingCount: number;
+    isFollowing: boolean;
 }
 
 export interface UserPatchSuccess extends UserBase {
@@ -81,7 +82,17 @@ export interface UserPublic {
     bio?: string;
 }
 
+export interface UserGetFollowingSuccess {
+    message: string;
+    followers: UserPublic[];
+}
+
 export interface UserGetFollowersSuccess {
     message: string;
     followers: UserPublic[];
+}
+
+export interface UserFollowSuccess {
+    message: string;
+    followedUser: string;
 }

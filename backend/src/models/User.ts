@@ -1,21 +1,19 @@
-import mongoose, { Schema, HydratedDocument, model } from 'mongoose';
+import mongoose, { Schema, HydratedDocument, model, Types } from 'mongoose';
 import validator from 'validator';
 import hashPassword from '../utils/hashPassword';
 import createJWT from '../utils/createJWT';
 import comparePasswords from '../utils/comparePasswords';
-import module from 'node:module';
-import ObjectId = module;
 
 // TypeScript interface (when just passing user data around)
 export interface IUser {
-    _id: ObjectId;
+    _id: Types.ObjectId;
     nickname: string;
     email: string;
     password: string;
     avatarUrl?: string;
     bio?: string;
-    followers: ObjectId[];
-    following: ObjectId[];
+    followers: Types.ObjectId[];
+    following: Types.ObjectId[];
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -75,11 +73,13 @@ const userSchema = new Schema<IUserDocument>(
             maxlength: [280, 'Bio must contain 280 characters or less.'],
         },
         followers: {
-            type: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+            type: [Schema.Types.ObjectId],
+            ref: 'User',
             default: [],
         },
         following: {
-            type: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+            type: [Schema.Types.ObjectId],
+            ref: 'User',
             default: [],
         },
     },

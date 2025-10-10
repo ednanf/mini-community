@@ -10,12 +10,13 @@ import {
 } from '../controllers/usersControllers';
 import { xss } from 'express-xss-sanitizer';
 import authenticate from '../middlewares/authenticate';
+import authenticateOrContinue from '../middlewares/authenticateOrContinue';
 import validateWithZod from '../middlewares/validateWithZod';
 import { userPatchSchema } from '../schemas/userSchemas';
 
 const router = express.Router();
 
-router.get('/:id', getUserById);
+router.get('/:id', authenticateOrContinue, getUserById);
 router.patch(
     '/me',
     xss(),
@@ -26,7 +27,7 @@ router.patch(
 router.delete('/me', authenticate, deleteUser as RequestHandler);
 router.get('/:id/followers', authenticate, getUserFollowers);
 router.get('/:id/following', authenticate, getUserFollowing);
-router.post('/:id/follow', authenticate, followUser as RequestHandler);
-router.post('/:id/unfollow', authenticate, unfollowUser as RequestHandler);
+router.post('/follow/:id', authenticate, followUser as RequestHandler);
+router.post('/unfollow/:id', authenticate, unfollowUser as RequestHandler);
 
 export default router;

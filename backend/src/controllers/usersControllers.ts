@@ -4,27 +4,37 @@ import {
     ApiResponse,
     UserDeleteSuccess,
     UserGetByIdSuccess,
+    UserGetFollowingSuccess,
     UserGetFollowersSuccess,
     UserPatchBody,
     UserPatchSuccess,
     UserPublic,
+    UserFollowSuccess,
 } from '../types/api';
 import { BadRequestError, NotFoundError } from '../errors';
 import User, { IUser } from '../models/User';
 import { StatusCodes } from 'http-status-codes';
+// Correctly import ObjectId from mongoose
+import { Types } from 'mongoose';
 
 const getUserById = async (req: Request, res: Response, next: NextFunction) => {
-    const { id: userId } = req.params;
+    const { id: profileUserId } = req.params;
+    const currentUserId = (req as AuthenticatedRequest).user?.userId;
     try {
-        const user = await User.findById({ _id: userId }).select(
+        const user = await User.findById(profileUserId).select(
             'nickname email bio avatarUrl followers following',
         );
         if (!user) {
             next(new NotFoundError('User was not found.'));
             return;
         }
-        // TODO: also fetch user's posts - to be created later
-        // TODO: update UserGetByIdSuccess type to include posts
+        let isFollowing = false;
+        if (currentUserId) {
+            // Use the correct type for the followerId parameter
+            isFollowing = user.followers.some(
+                (followerId: Types.ObjectId) => followerId.toString() === currentUserId,
+            );
+        }
         const response: ApiResponse<UserGetByIdSuccess> = {
             status: 'success',
             data: {
@@ -36,6 +46,7 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
                 avatarUrl: user.avatarUrl,
                 followersCount: user.followers.length,
                 followingCount: user.following.length,
+                isFollowing: isFollowing,
             },
         };
         res.status(StatusCodes.OK).json(response);
@@ -43,6 +54,8 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
         next(error);
     }
 };
+
+// ... The rest of your controllers
 
 const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { userId } = req.user;
@@ -114,10 +127,10 @@ const getUserFollowers = async (req: Request, res: Response, next: NextFunction)
             avatarUrl: follower.avatarUrl,
             bio: follower.bio,
         }));
-        const response: ApiResponse<UserGetFollowersSuccess> = {
+        const response: ApiResponse<UserGetFollowingSuccess> = {
             status: 'success',
             data: {
-                message: 'Followers fetched successfully.',
+                message: "User's followers fetched successfully.",
                 followers: followersData,
             },
         };
@@ -127,12 +140,75 @@ const getUserFollowers = async (req: Request, res: Response, next: NextFunction)
     }
 };
 
+// TODO: Fix this controller, it is not showing the user's following properly
 const getUserFollowing = async (req: Request, res: Response, next: NextFunction) => {
-    res.status(200).json({ msg: 'get user following hit' });
+    const { id: userId } = req.params;
+    try {
+        const user = await User.findById(userId).select('following').populate('following');
+        if (!user) {
+            next(new NotFoundError('User was not found.'));
+            return;
+        }
+        const followingData: UserPublic[] = user.following.map((follower: IUser) => ({
+            id: follower._id.toString(),
+            email: follower.email,
+            avatarUrl: follower.avatarUrl,
+            bio: follower.bio,
+        }));
+        const response: ApiResponse<UserGetFollowersSuccess> = {
+            status: 'success',
+            data: {
+                message: "User's following list fetched successfully.",
+                followers: followingData,
+            },
+        };
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
 };
 
 const followUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    res.status(200).json({ msg: 'follow user hit' });
+    const { userId: followerId } = req.user;
+    const { id: followeeId } = req.params;
+
+    if (followerId === followeeId) {
+        next(new BadRequestError('You cannot follow yourself.'));
+        return;
+    }
+
+    try {
+        // Promise.all runs both updates concurrently for better performance.
+        const [follower, followee] = await Promise.all([
+            User.findByIdAndUpdate(
+                followerId,
+                { $addToSet: { following: followeeId } }, // $addToSet prevents duplicates
+                { new: true },
+            ),
+            User.findByIdAndUpdate(
+                followeeId,
+                { $addToSet: { followers: followerId } },
+                { new: true },
+            ),
+        ]);
+
+        if (!follower || !followee) {
+            next(new NotFoundError('Could not follow user. One or both users not found.'));
+            return;
+        }
+
+        const response: ApiResponse<UserFollowSuccess> = {
+            status: 'success',
+            data: {
+                message: 'User followed successfully.',
+                followedUser: followee._id.toString(),
+            },
+        };
+
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
 };
 
 const unfollowUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
