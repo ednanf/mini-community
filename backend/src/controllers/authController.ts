@@ -15,9 +15,13 @@ import {
 import { AuthenticatedRequest } from '../types/express';
 
 const registerUser = async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password }: UserRegisterBody = req.body;
+    const { email, password, nickname }: UserRegisterBody = req.body;
+    if (!email || !password || !nickname) {
+        next(new BadRequestError('Email and password are required'));
+        return;
+    }
     try {
-        const newUser: IUserDocument = await User.create({ email, password });
+        const newUser: IUserDocument = await User.create({ email, password, nickname });
         const token = await newUser.createJWT();
         const response: ApiResponse<UserRegisterSuccess> = {
             status: 'success',
