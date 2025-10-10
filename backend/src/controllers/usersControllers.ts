@@ -137,7 +137,6 @@ const getUserFollowers = async (req: Request, res: Response, next: NextFunction)
     }
 };
 
-// TODO: Fix this controller, it is not showing the user's following properly
 const getUserFollowing = async (req: Request, res: Response, next: NextFunction) => {
     const { id: userId } = req.params;
     try {
