@@ -10,6 +10,7 @@ import {
     UserPatchSuccess,
     UserPublic,
     UserFollowSuccess,
+    UserUnfollowSuccess,
 } from '../types/api';
 import { BadRequestError, NotFoundError } from '../errors';
 import User, { IUser } from '../models/User';
@@ -19,6 +20,7 @@ import { Types } from 'mongoose';
 const getUserById = async (req: Request, res: Response, next: NextFunction) => {
     const { id: profileUserId } = req.params;
     const currentUserId = (req as AuthenticatedRequest).user?.userId;
+
     try {
         const user = await User.findById(profileUserId).select(
             'nickname email bio avatarUrl followers following',
@@ -27,6 +29,7 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
             next(new NotFoundError('User was not found.'));
             return;
         }
+
         let isFollowing = false;
         if (currentUserId) {
             // Use the correct type for the followerId parameter
@@ -34,6 +37,7 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
                 (followerId: Types.ObjectId) => followerId.toString() === currentUserId,
             );
         }
+
         const response: ApiResponse<UserGetByIdSuccess> = {
             status: 'success',
             data: {
@@ -48,6 +52,7 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
                 isFollowing: isFollowing,
             },
         };
+
         res.status(StatusCodes.OK).json(response);
     } catch (error) {
         next(error);
@@ -61,6 +66,7 @@ const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFun
         next(new BadRequestError('No valid update data provided.'));
         return;
     }
+
     try {
         const patchedUser = await User.findByIdAndUpdate({ _id: userId }, updatePayload, {
             new: true,
@@ -69,6 +75,7 @@ const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFun
         if (!patchedUser) {
             new NotFoundError('User was not found.');
         }
+
         const response: ApiResponse<UserPatchSuccess> = {
             status: 'success',
             data: {
@@ -79,6 +86,7 @@ const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFun
                 avatarUrl: patchedUser.avatarUrl,
             },
         };
+
         res.status(StatusCodes.OK).json(response);
     } catch (error) {
         next(error);
@@ -87,6 +95,7 @@ const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFun
 
 const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { userId } = req.user;
+
     try {
         // TODO: Also delete all posts, comments, likes, followers, following, etc. as exemplified below
         // await Category.deleteMany({ createdBy: userId });
@@ -96,6 +105,7 @@ const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFu
             new NotFoundError('User was not found.');
             return;
         }
+
         const response: ApiResponse<UserDeleteSuccess> = {
             status: 'success',
             data: {
@@ -103,27 +113,30 @@ const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFu
                 email: userToBeDeleted.email,
             },
         };
+
         res.status(StatusCodes.OK).json(response);
     } catch (error) {
         next(error);
     }
-    res.status(StatusCodes.OK).json({ msg: 'delete user hit' });
 };
 
 const getUserFollowers = async (req: Request, res: Response, next: NextFunction) => {
     const { id: userId } = req.params;
+
     try {
         const user = await User.findById(userId).select('followers').populate('followers');
         if (!user) {
             next(new NotFoundError('User was not found.'));
             return;
         }
+
         const followersData: UserPublic[] = user.followers.map((follower: IUser) => ({
             id: follower._id.toString(),
             email: follower.email,
             avatarUrl: follower.avatarUrl,
             bio: follower.bio,
         }));
+
         const response: ApiResponse<UserGetFollowingSuccess> = {
             status: 'success',
             data: {
@@ -131,6 +144,7 @@ const getUserFollowers = async (req: Request, res: Response, next: NextFunction)
                 followers: followersData,
             },
         };
+
         res.status(StatusCodes.OK).json(response);
     } catch (error) {
         next(error);
@@ -139,18 +153,21 @@ const getUserFollowers = async (req: Request, res: Response, next: NextFunction)
 
 const getUserFollowing = async (req: Request, res: Response, next: NextFunction) => {
     const { id: userId } = req.params;
+
     try {
         const user = await User.findById(userId).select('following').populate('following');
         if (!user) {
             next(new NotFoundError('User was not found.'));
             return;
         }
+
         const followingData: UserPublic[] = user.following.map((follower: IUser) => ({
             id: follower._id.toString(),
             email: follower.email,
             avatarUrl: follower.avatarUrl,
             bio: follower.bio,
         }));
+
         const response: ApiResponse<UserGetFollowersSuccess> = {
             status: 'success',
             data: {
@@ -158,6 +175,7 @@ const getUserFollowing = async (req: Request, res: Response, next: NextFunction)
                 followers: followingData,
             },
         };
+
         res.status(StatusCodes.OK).json(response);
     } catch (error) {
         next(error);
@@ -208,7 +226,35 @@ const followUser = async (req: AuthenticatedRequest, res: Response, next: NextFu
 };
 
 const unfollowUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    res.status(200).json({ msg: 'unfollow user hit' });
+    const { userId: followerId } = req.user;
+    const { id: followeeId } = req.params;
+
+    if (followerId === followeeId) {
+        next(new BadRequestError('You cannot unfollow yourself.'));
+        return;
+    }
+
+    try {
+        const [follower, followee] = await Promise.all([
+            User.findByIdAndUpdate(followerId, { $pull: { following: followeeId } }, { new: true }),
+            User.findByIdAndUpdate(followeeId, { $pull: { followers: followerId } }, { new: true }),
+        ]);
+        if (!follower || !followee) {
+            next(new NotFoundError('Could not unfollow user. One or both users not found.'));
+            return;
+        }
+
+        const response: ApiResponse<UserUnfollowSuccess> = {
+            status: 'success',
+            data: {
+                message: 'User unfollowed successfully.',
+                unfollowedUser: followee._id.toString(),
+            },
+        };
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
 };
 
 export {

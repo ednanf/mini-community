@@ -20,9 +20,11 @@ const registerUser = async (req: Request, res: Response, next: NextFunction) => 
         next(new BadRequestError('Email and password are required'));
         return;
     }
+
     try {
         const newUser: IUserDocument = await User.create({ email, password, nickname });
         const token = await newUser.createJWT();
+
         const response: ApiResponse<UserRegisterSuccess> = {
             status: 'success',
             data: {
@@ -32,6 +34,7 @@ const registerUser = async (req: Request, res: Response, next: NextFunction) => 
                 token,
             },
         };
+
         res.status(StatusCodes.CREATED).json(response);
     } catch (error) {
         next(error);
@@ -44,6 +47,7 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
         next(new BadRequestError('Email and password are required'));
         return;
     }
+
     try {
         // .select('+password') includes password field for verification
         const candidateUser = await User.findOne<IUserDocument>({ email }).select('+password');
@@ -51,12 +55,15 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
             next(new UnauthorizedError('There is an issue with your email or password'));
             return;
         }
+
         const isPasswordValid = await comparePasswords(password, candidateUser.password);
         if (!isPasswordValid) {
             next(new UnauthorizedError('There is an issue with your email or password.'));
             return;
         }
+
         const token = await candidateUser.createJWT();
+
         const response: ApiResponse<UserLoginSuccess> = {
             status: 'success',
             data: {
@@ -66,6 +73,7 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
                 token,
             },
         };
+
         res.status(StatusCodes.OK).json(response);
     } catch (error) {
         next(error);
@@ -79,17 +87,20 @@ const logoutUser = (_req: Request, res: Response) => {
             message: 'Good bye!',
         },
     };
+
     res.status(StatusCodes.OK).json(response);
 };
 
 const me = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
     const { userId } = req.user;
+
     try {
         const user: IUserDocument | null = await User.findById(userId);
         if (!user) {
             next(new UnauthenticatedError('User is not authenticated.'));
             return;
         }
+
         const response: ApiResponse<UserMeSuccess> = {
             status: 'success',
             data: {
@@ -99,6 +110,7 @@ const me = async (req: AuthenticatedRequest, res: Response, next: NextFunction) 
                 email: user?.email,
             },
         };
+
         res.status(StatusCodes.OK).json(response);
     } catch (error) {
         next(error);

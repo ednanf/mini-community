@@ -16,7 +16,7 @@ import { userPatchSchema } from '../schemas/userSchemas';
 
 const router = express.Router();
 
-router.get('/:id', authenticateOrContinue, getUserById);
+router.get('/:id', authenticateOrContinue as RequestHandler, getUserById);
 router.patch(
     '/me',
     xss(),

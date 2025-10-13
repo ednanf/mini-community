@@ -96,3 +96,8 @@ export interface UserFollowSuccess {
     message: string;
     followedUser: string;
 }
+
+export interface UserUnfollowSuccess {
+    message: string;
+    unfollowedUser: string;
+}
