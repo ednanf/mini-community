@@ -24,7 +24,7 @@ export interface IUserDocument extends IUser, HydratedDocument<IUser> {
     createJWT(payload?: Record<string, unknown>): Promise<string>;
 }
 
-const userSchema = new Schema<IUserDocument>(
+const UserSchema = new Schema<IUserDocument>(
     {
         nickname: {
             type: String,
@@ -87,20 +87,20 @@ const userSchema = new Schema<IUserDocument>(
 );
 
 // Hash password only if it was modified
-userSchema.pre('save', async function hashPasswordBeforeSave() {
+UserSchema.pre('save', async function hashPasswordBeforeSave() {
     if (this.isModified('password')) {
         this.password = await hashPassword(this.password);
     }
 });
 
 // User schema methods
-userSchema.methods.createJWT = async function createUserJWT(payload: Record<string, unknown> = {}) {
+UserSchema.methods.createJWT = async function createUserJWT(payload: Record<string, unknown> = {}) {
     // Package the user's MongoDB _id as userId into the JWT payload.
     // This is  where the userId is embedded into the token.
     return createJWT({ userId: this._id, ...payload });
 };
 
-userSchema.methods.comparePassword = async function compareUserPassword(
+UserSchema.methods.comparePassword = async function compareUserPassword(
     candidatePassword: string,
 ): Promise<boolean> {
     return comparePasswords(candidatePassword, this.password);
@@ -116,6 +116,6 @@ userSchema.methods.comparePassword = async function compareUserPassword(
  *
  * models.User checks if the model already exists before creating a new one.
  */
-const User = mongoose.models.User || model<IUserDocument>('User', userSchema);
+const User = mongoose.models.User || model<IUserDocument>('User', UserSchema);
 
 export default User;
