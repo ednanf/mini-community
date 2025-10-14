@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { userLoginSchema, userPatchSchema, userRegisterSchema } from '../schemas/userSchemas';
+import { IPost } from '../models/Post';
 
 /*
  * Generic types
@@ -101,3 +102,15 @@ export interface UserUnfollowSuccess {
     message: string;
     unfollowedUser: string;
 }
+
+/*
+ * Post types
+ * **/
+
+export interface PostBase {
+    message: string;
+    content: IPost[];
+    nextCursor: string | null; // null if there are no more posts to fetch
+}
+
+export type PostRetrieveSuccess = PostBase;
