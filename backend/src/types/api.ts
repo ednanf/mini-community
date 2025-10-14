@@ -109,13 +109,18 @@ export interface UserUnfollowSuccess {
 
 export interface PostBase {
     message: string;
+}
+
+export interface PostsGetSuccess extends PostBase {
     content: IPost[];
     nextCursor: string | null; // null if there are no more posts to fetch
 }
 
-export type PostRetrieveSuccess = PostBase;
-
 export interface PostCreateSuccess {
     message: string;
+    content: IPost;
+}
+
+export interface PostGetByIdSuccess extends PostBase {
     content: IPost;
 }

@@ -1,12 +1,15 @@
-import express from 'express';
+import express, { RequestHandler } from 'express';
 import authenticate from '../middlewares/authenticate';
 import { getPosts, createPost, getPostById, deletePost } from '../controllers/postsController';
+import validateObjectId from '../middlewares/validateObjectId';
 
 const router = express.Router();
 
 router.get('/', getPosts);
-router.post('/', authenticate, createPost);
-router.get('/:id', getPostById);
-router.delete('/:id', authenticate, deletePost);
+router.post('/', authenticate, createPost as RequestHandler);
+router
+    .route('/:id')
+    .get(validateObjectId('id'), getPostById)
+    .delete(authenticate, validateObjectId('id'), deletePost as RequestHandler);
 
 export default router;

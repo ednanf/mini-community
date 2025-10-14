@@ -1,10 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import Post, { IPost } from '../models/Post';
 import mongoose from 'mongoose';
-import { ApiResponse, PostCreateSuccess, PostRetrieveSuccess } from '../types/api';
+import { ApiResponse, PostCreateSuccess, PostGetByIdSuccess, PostsGetSuccess } from '../types/api';
 import { StatusCodes } from 'http-status-codes';
 import { AuthenticatedRequest } from '../types/express';
-import { BadRequestError, UnauthenticatedError } from '../errors';
+import { BadRequestError, NotFoundError, UnauthenticatedError } from '../errors';
 
 const getPosts = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -36,7 +36,7 @@ const getPosts = async (req: Request, res: Response, next: NextFunction) => {
         // It's the _id of the *last* item in the current list, if there isn't a next page, it's null
         const nextCursor = hasNextPage ? posts[posts.length - 1]._id.toString() : null;
 
-        const response: ApiResponse<PostRetrieveSuccess> = {
+        const response: ApiResponse<PostsGetSuccess> = {
             status: 'success',
             data: {
                 message: 'Posts retrieved successfully',
@@ -79,12 +79,30 @@ const createPost = async (req: AuthenticatedRequest, res: Response, next: NextFu
     } catch (error) {
         next(error);
     }
-    res.status(201).json({ message: 'Create a new post' });
 };
 
-const getPostById = (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    res.status(200).json({ message: `Get post with ID: ${id}` });
+const getPostById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params; // Validated by middleware
+
+        const post = await Post.findOne({ _id: id });
+        if (!post) {
+            next(new NotFoundError('Post not found.'));
+            return;
+        }
+
+        const response: ApiResponse<PostGetByIdSuccess> = {
+            status: 'success',
+            data: {
+                message: 'Post retrieved successfully',
+                content: post,
+            },
+        };
+
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
 };
 
 const deletePost = (req: Request, res: Response, next: NextFunction) => {
