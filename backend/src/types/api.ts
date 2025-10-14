@@ -124,3 +124,7 @@ export interface PostCreateSuccess {
 export interface PostGetByIdSuccess extends PostBase {
     content: IPost;
 }
+
+export interface PostDeleteSuccess extends PostBase {
+    deletedPostId: string;
+}

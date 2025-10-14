@@ -1,7 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import Post, { IPost } from '../models/Post';
 import mongoose from 'mongoose';
-import { ApiResponse, PostCreateSuccess, PostGetByIdSuccess, PostsGetSuccess } from '../types/api';
+import {
+    ApiResponse,
+    PostCreateSuccess,
+    PostDeleteSuccess,
+    PostGetByIdSuccess,
+    PostsGetSuccess,
+} from '../types/api';
 import { StatusCodes } from 'http-status-codes';
 import { AuthenticatedRequest } from '../types/express';
 import { BadRequestError, NotFoundError, UnauthenticatedError } from '../errors';
@@ -105,9 +111,29 @@ const getPostById = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const deletePost = (req: Request, res: Response, next: NextFunction) => {
-    const { id } = req.params;
-    res.status(200).json({ message: `Delete post with ID: ${id}` });
+const deletePost = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { id: postId } = req.params;
+        const { userId } = req.user;
+
+        const postToDelete = await Post.findOneAndDelete({ _id: postId, createdBy: userId });
+        if (!postToDelete) {
+            next(new NotFoundError('Post not found or you do not have permission to delete it.'));
+            return;
+        }
+
+        const response: ApiResponse<PostDeleteSuccess> = {
+            status: 'success',
+            data: {
+                message: 'Post deleted successfully',
+                deletedPostId: postToDelete._id.toString(),
+            },
+        };
+
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
 };
 
 export { getPosts, createPost, getPostById, deletePost };
