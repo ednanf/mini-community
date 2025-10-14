@@ -38,9 +38,6 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
             );
         }
 
-        // TODO: add user's posts in the response (maybe with pagination if needed)
-        // consider instead implementing just a Promise.all + .populate() + endpoint already created in postsController
-
         const response: ApiResponse<UserGetByIdSuccess> = {
             status: 'success',
             data: {
