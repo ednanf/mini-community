@@ -1,7 +1,7 @@
 import mongoose, { Schema } from 'mongoose';
 
 export interface IPost {
-    author: string;
+    createdBy: Schema.Types.ObjectId;
     content: string;
     createdAt?: Date;
     updatedAt?: Date;
@@ -9,10 +9,9 @@ export interface IPost {
 
 const postSchema = new Schema<IPost>(
     {
-        author: {
-            type: String,
-            required: true,
-            trim: true,
+        createdBy: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
         },
         content: {
             type: String,

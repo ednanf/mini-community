@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import Post, { IPost } from '../models/Post';
 import mongoose from 'mongoose';
-import { ApiResponse, PostRetrieveSuccess } from '../types/api';
+import { ApiResponse, PostCreateSuccess, PostRetrieveSuccess } from '../types/api';
 import { StatusCodes } from 'http-status-codes';
+import { AuthenticatedRequest } from '../types/express';
+import { BadRequestError, UnauthenticatedError } from '../errors';
 
 const getPosts = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -49,7 +51,34 @@ const getPosts = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const createPost = (req: Request, res: Response, next: NextFunction) => {
+const createPost = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    try {
+        const { userId } = req.user;
+        if (!userId) {
+            next(new UnauthenticatedError('User not authenticated.'));
+            return;
+        }
+
+        const { content } = req.body;
+        if (!content) {
+            next(new BadRequestError('You cannot make an empty post.'));
+            return;
+        }
+
+        const newPost: IPost = await Post.create({ createdBy: userId, content });
+
+        const response: ApiResponse<PostCreateSuccess> = {
+            status: 'success',
+            data: {
+                message: 'Post created successfully',
+                content: newPost,
+            },
+        };
+
+        res.status(StatusCodes.CREATED).json(response);
+    } catch (error) {
+        next(error);
+    }
     res.status(201).json({ message: 'Create a new post' });
 };
 

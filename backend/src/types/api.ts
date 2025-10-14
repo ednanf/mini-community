@@ -114,3 +114,8 @@ export interface PostBase {
 }
 
 export type PostRetrieveSuccess = PostBase;
+
+export interface PostCreateSuccess {
+    message: string;
+    content: IPost;
+}
