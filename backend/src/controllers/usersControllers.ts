@@ -18,10 +18,9 @@ import { StatusCodes } from 'http-status-codes';
 import { Types } from 'mongoose';
 
 const getUserById = async (req: Request, res: Response, next: NextFunction) => {
-    const { id: profileUserId } = req.params;
-    const currentUserId = (req as AuthenticatedRequest).user?.userId;
-
     try {
+        const { id: profileUserId } = req.params;
+        const currentUserId = (req as AuthenticatedRequest).user?.userId;
         const user = await User.findById(profileUserId).select(
             'nickname email bio avatarUrl followers following',
         );
@@ -60,14 +59,14 @@ const getUserById = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const { userId } = req.user;
-    const updatePayload: UserPatchBody = req.body;
-    if (Object.keys(updatePayload).length === 0) {
-        next(new BadRequestError('No valid update data provided.'));
-        return;
-    }
-
     try {
+        const { userId } = req.user;
+        const updatePayload: UserPatchBody = req.body;
+        if (Object.keys(updatePayload).length === 0) {
+            next(new BadRequestError('No valid update data provided.'));
+            return;
+        }
+
         const patchedUser = await User.findByIdAndUpdate({ _id: userId }, updatePayload, {
             new: true,
             runValidators: true,
@@ -94,9 +93,9 @@ const patchUser = async (req: AuthenticatedRequest, res: Response, next: NextFun
 };
 
 const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const { userId } = req.user;
-
     try {
+        const { userId } = req.user;
+
         // TODO: Also delete all posts, comments, likes, followers, following, etc. as exemplified below
         // await Category.deleteMany({ createdBy: userId });
         // await Transaction.deleteMany({ createdBy: userId });
@@ -121,9 +120,9 @@ const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFu
 };
 
 const getUserFollowers = async (req: Request, res: Response, next: NextFunction) => {
-    const { id: userId } = req.params;
-
     try {
+        const { id: userId } = req.params;
+
         const user = await User.findById(userId).select('followers').populate('followers');
         if (!user) {
             next(new NotFoundError('User was not found.'));
@@ -152,9 +151,9 @@ const getUserFollowers = async (req: Request, res: Response, next: NextFunction)
 };
 
 const getUserFollowing = async (req: Request, res: Response, next: NextFunction) => {
-    const { id: userId } = req.params;
-
     try {
+        const { id: userId } = req.params;
+
         const user = await User.findById(userId).select('following').populate('following');
         if (!user) {
             next(new NotFoundError('User was not found.'));
@@ -183,15 +182,15 @@ const getUserFollowing = async (req: Request, res: Response, next: NextFunction)
 };
 
 const followUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const { userId: followerId } = req.user;
-    const { id: followeeId } = req.params;
-
-    if (followerId === followeeId) {
-        next(new BadRequestError('You cannot follow yourself.'));
-        return;
-    }
-
     try {
+        const { userId: followerId } = req.user;
+        const { id: followeeId } = req.params;
+
+        if (followerId === followeeId) {
+            next(new BadRequestError('You cannot follow yourself.'));
+            return;
+        }
+
         // Promise.all runs both updates concurrently for better performance.
         const [follower, followee] = await Promise.all([
             User.findByIdAndUpdate(
@@ -226,15 +225,15 @@ const followUser = async (req: AuthenticatedRequest, res: Response, next: NextFu
 };
 
 const unfollowUser = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
-    const { userId: followerId } = req.user;
-    const { id: followeeId } = req.params;
-
-    if (followerId === followeeId) {
-        next(new BadRequestError('You cannot unfollow yourself.'));
-        return;
-    }
-
     try {
+        const { userId: followerId } = req.user;
+        const { id: followeeId } = req.params;
+
+        if (followerId === followeeId) {
+            next(new BadRequestError('You cannot unfollow yourself.'));
+            return;
+        }
+
         const [follower, followee] = await Promise.all([
             User.findByIdAndUpdate(followerId, { $pull: { following: followeeId } }, { new: true }),
             User.findByIdAndUpdate(followeeId, { $pull: { followers: followerId } }, { new: true }),
