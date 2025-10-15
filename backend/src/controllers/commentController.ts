@@ -13,29 +13,34 @@ import { AuthenticatedRequest } from '../types/express';
 
 const getComments = async (req: Request, res: Response, next: NextFunction) => {
     try {
-        // 1. Get 'limit' and 'cursor' from query parameters
+        // 1. Get postId from route parameters
+        const { postId } = req.params;
+
+        // 2. Get 'limit' and 'cursor' from query parameters
         const { limit: queryLimit, cursor } = req.query;
         const limit = parseInt(queryLimit as string, 10) || 20; // Default limit to 20
 
-        // 2. Database query, sorted by '_id' in descending order
-        const query: { _id?: { $lt: mongoose.Types.ObjectId } } = {};
+        // 3. Database query, sorted by '_id' in descending order
+        const query: { parentPost: string; _id?: { $lt: mongoose.Types.ObjectId } } = {
+            parentPost: postId,
+        };
         if (cursor && typeof cursor === 'string') {
             query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
         }
 
-        // 3. Fetch one more item than the requested limit to check if there's a next page
+        // 4. Fetch one more item than the requested limit to check if there's a next page
         const comments: (IComment & { _id: mongoose.Types.ObjectId })[] = await Comment.find(query)
             .sort({ _id: -1 })
             .limit(limit + 1)
             .lean();
 
-        // 4. Check if there is a next page
+        // 5. Check if there is a next page
         const hasNextPage = comments.length > limit;
         if (hasNextPage) {
             comments.pop(); // Remove the extra item used to check for next page
         }
 
-        // 5. Determine the next cursor
+        // 6. Determine the next cursor
         const nextCursor = hasNextPage ? comments[comments.length - 1]._id.toString() : null;
 
         const response: ApiResponse<CommentGetSuccess> = {

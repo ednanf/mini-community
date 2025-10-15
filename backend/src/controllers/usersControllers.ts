@@ -16,6 +16,8 @@ import { BadRequestError, NotFoundError } from '../errors';
 import User, { IUser } from '../models/User';
 import { StatusCodes } from 'http-status-codes';
 import { Types } from 'mongoose';
+import Post from '../models/Post';
+import Comment from '../models/Comment';
 
 const getUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -96,14 +98,26 @@ const deleteUser = async (req: AuthenticatedRequest, res: Response, next: NextFu
     try {
         const { userId } = req.user;
 
-        // TODO: Also delete all posts, comments, likes, followers, following, etc. as exemplified below
-        // await Category.deleteMany({ createdBy: userId });
-        // await Transaction.deleteMany({ createdBy: userId });
-        const userToBeDeleted = await User.findByIdAndDelete(userId);
+        const userToBeDeleted = await User.findById(userId);
         if (!userToBeDeleted) {
             new NotFoundError('User was not found.');
             return;
         }
+
+        // Delete user's posts and comments, remove them from 'followers' and 'following' lists
+        await Promise.all([
+            Post.deleteMany({ createdBy: userId }),
+            Comment.deleteMany({ createdBy: userId }),
+            User.updateMany(
+                { _id: { $in: userToBeDeleted.following } },
+                { $pull: { followers: userId } },
+            ),
+            User.updateMany(
+                { _id: { $in: userToBeDeleted.followers } },
+                { $pull: { following: userId } },
+            ),
+            User.findByIdAndDelete(userId),
+        ]);
 
         const response: ApiResponse<UserDeleteSuccess> = {
             status: 'success',
