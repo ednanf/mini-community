@@ -10,7 +10,7 @@ import {
 } from '../types/api';
 import { StatusCodes } from 'http-status-codes';
 import { AuthenticatedRequest } from '../types/express';
-import { BadRequestError, NotFoundError, UnauthenticatedError } from '../errors';
+import { NotFoundError, UnauthenticatedError } from '../errors';
 
 const getPosts = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -65,11 +65,7 @@ const createPost = async (req: AuthenticatedRequest, res: Response, next: NextFu
             return;
         }
 
-        const { content } = req.body;
-        if (!content) {
-            next(new BadRequestError('You cannot make an empty post.'));
-            return;
-        }
+        const { content } = req.body; // Validated by middleware
 
         const newPost: IPost = await Post.create({ createdBy: userId, content });
 

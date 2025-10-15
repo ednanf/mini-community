@@ -1,15 +1,19 @@
 import express, { RequestHandler } from 'express';
+import { xss } from 'express-xss-sanitizer';
 import authenticate from '../middlewares/authenticate';
 import { getPosts, createPost, getPostById, deletePost } from '../controllers/postsController';
 import commentsRouter from '../routes/commentsRoutes'; // Needed for nested routes
 import validateObjectId from '../middlewares/validateObjectId';
+import validateWithZod from '../middlewares/validateWithZod';
+import postCreateSchema from '../schemas/postSchemas';
 
 const router = express.Router();
 
-// TODO: Add sanitization
+router
+    .route('/')
+    .get(getPosts)
+    .post(authenticate, xss(), validateWithZod(postCreateSchema), createPost as RequestHandler);
 
-router.get('/', getPosts);
-router.post('/', authenticate, createPost as RequestHandler);
 router
     .route('/:id')
     .get(validateObjectId('id'), getPostById)
