@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { userLoginSchema, userPatchSchema, userRegisterSchema } from '../schemas/userSchemas';
 import { IPost } from '../models/Post';
+import { IComment } from '../models/Comment';
 
 /*
  * Generic types
@@ -127,4 +128,25 @@ export interface PostGetByIdSuccess extends PostBase {
 
 export interface PostDeleteSuccess extends PostBase {
     deletedPostId: string;
+}
+
+/*
+ * Comment types
+ * **/
+
+export interface CommentBase {
+    message: string;
+}
+
+export interface CommentGetSuccess extends CommentBase {
+    content: IComment[];
+    nextCursor: string | null; // null if there are no more comments to fetch
+}
+
+export interface CommentCreateSuccess extends CommentBase {
+    content: IComment;
+}
+
+export interface CommentDeleteSuccess extends CommentBase {
+    deletedCommentId: string;
 }
