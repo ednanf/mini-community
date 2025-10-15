@@ -8,7 +8,7 @@ import {
     CommentGetSuccess,
 } from '../types/api';
 import { StatusCodes } from 'http-status-codes';
-import { BadRequestError, NotFoundError, UnauthenticatedError } from '../errors';
+import { NotFoundError, UnauthenticatedError } from '../errors';
 import { AuthenticatedRequest } from '../types/express';
 
 const getComments = async (req: Request, res: Response, next: NextFunction) => {
@@ -67,11 +67,7 @@ const createComment = async (req: AuthenticatedRequest, res: Response, next: Nex
             return;
         }
 
-        const { content } = req.body;
-        if (!content) {
-            next(new BadRequestError('You cannot make an empty comment.'));
-            return;
-        }
+        const { content } = req.body; // Validated by middleware
 
         const newComment = await Comment.create({ createdBy: userId, parentPost: postId, content });
 
@@ -98,15 +94,12 @@ const deleteComment = async (req: AuthenticatedRequest, res: Response, next: Nex
         }
 
         const { id: commentId } = req.params; // Validated by middleware
-        if (!commentId) {
-            next(new NotFoundError('Comment not found'));
-            return;
-        }
 
         const commentToDelete = await Comment.findOneAndDelete({
             _id: commentId,
             createdBy: userId,
         });
+
         if (!commentToDelete) {
             next(
                 new NotFoundError(
