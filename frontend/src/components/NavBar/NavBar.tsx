@@ -1,5 +1,5 @@
 import NavBarButton from './NavBarButton.tsx';
-import RoundButton from '../RoundButton/RoundButton.tsx';
+import RoundButtonLink from '../RoundButtonLink/RoundButtonLink.tsx';
 
 import { CiGlobe } from 'react-icons/ci';
 import { CgFeed } from 'react-icons/cg';
@@ -29,7 +29,7 @@ const NavBar = () => {
           Settings
         </NavBarButton>
       </div>
-      <RoundButton to={'new-post'} icon={<GoPlus />} />
+      <RoundButtonLink to={'new-post'} icon={<GoPlus />} />
     </HStack>
   );
 };
