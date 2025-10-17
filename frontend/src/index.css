@@ -5,3 +5,17 @@
     border: 0;
     box-sizing: border-box;
 }
+
+:root {
+    --color-bg-light: #f5f5f5;
+
+    /* Semantic mapping */
+    --color-bg: var(--color-bg-light)
+}
+
+[data-theme="dark"] {
+    --color-bg-dark: #121212;
+
+    /* Semantic mapping */
+    --color-bg: var(--color-bg-dark)
+}
