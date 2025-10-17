@@ -1,4 +1,4 @@
-# Finance Dashboard
+# Mini Community
 
 ## Notes
 
