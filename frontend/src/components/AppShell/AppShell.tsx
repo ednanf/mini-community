@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
+import styles from './AppShell.module.css';
 
-const Layout = () => {
+const AppShell = () => {
   return (
     <>
       <p>NavBar</p>
@@ -8,4 +9,4 @@ const Layout = () => {
     </>
   );
 };
-export default Layout;
+export default AppShell;

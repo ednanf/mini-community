@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 // Pages
-import Layout from './components/Layout/Layout.tsx';
+import AppShell from './components/AppShell/AppShell.tsx';
 import EditProfile from './pages/EditProfile/EditProfile.tsx';
 import GlobalFeed from './pages/GlobalFeed/GlobalFeed.tsx';
 import LandingPage from './pages/LandingPage/LandingPage.tsx';
@@ -22,7 +22,7 @@ import './index.css';
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <Layout />,
+    element: <AppShell />,
     children: [
       { index: true, element: <LandingPage /> },
       { path: 'login', element: <LoginPage /> },
