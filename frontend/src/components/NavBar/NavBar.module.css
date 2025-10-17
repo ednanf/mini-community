@@ -1,0 +1,22 @@
+.navBar {
+    display: flex;
+    justify-content: space-around;
+    gap: 0.1rem;
+    padding: 0.3rem 0.1rem;
+    align-items: center;
+    border: 1px solid var(--color-navbar-border);
+    border-radius: 10rem;
+    background-color: var(--color-navbar-background);
+    backdrop-filter: blur(10px);
+    --webkit-backdrop-filter: blur(10px);
+    flex-grow: 1;
+}
+
+.navBarHStack {
+    display: flex;
+    gap: 1rem;
+    align-items: stretch;
+    width: 100%;
+    max-width: 1000px;
+    min-width: 300px;
+}

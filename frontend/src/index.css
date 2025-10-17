@@ -1,3 +1,6 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+
 /* Reset styles */
 * {
     margin: 0;
@@ -6,16 +9,81 @@
     box-sizing: border-box;
 }
 
+html {
+    font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6, p, div, span, a, button {
+    font-family: 'Montserrat', sans-serif;
+}
+
 :root {
-    --color-bg-light: #f5f5f5;
+    /* General colors */
+    --color-bg-light: #f5f5f5; /* primary background */
+    --color-border-light: #e0e0e0; /* subtle borders in light mode */
+    --color-text-primary-light: #14171A; /* main text */
+    --color-text-secondary-light: #657786; /* secondary / muted text */
+    --color-primary-light: #2979FF; /* main interactive color */
+    --color-secondary-light-gray-light: #F5F8FA; /* cards / surfaces */
+    --color-secondary-medium-gray-light: #657786; /* secondary containers */
+    --color-secondary-dark-gray-light: #14171A; /* darker text on lighter cards */
+    --color-accent-blue-light: #2979FF; /* links, buttons */
+    --color-accent-red-light: #E0245E; /* notifications / likes */
+    --color-accent-green-light: #17BF63; /* success / online */
+
+    /* NavBar */
+    --color-navbar-background-light: rgba(255, 255, 255, 0.4);
+    --color-navbar-border-light: rgba(255, 255, 255, 0.4);
 
     /* Semantic mapping */
-    --color-bg: var(--color-bg-light)
+    --color-bg: var(--color-bg-light);
+    --color-border: var(--color-border-light);
+    --color-text-primary: var(--color-text-primary-light);
+    --color-text-secondary: var(--color-text-secondary-light);
+    --color-primary: var(--color-primary-light);
+    --color-secondary-light-gray: var(--color-secondary-light-gray-light);
+    --color-secondary-medium-gray: var(--color-secondary-medium-gray-light);
+    --color-secondary-dark-gray: var(--color-secondary-dark-gray-light);
+    --color-accent-blue: var(--color-accent-blue-light);
+    --color-accent-red: var(--color-accent-red-light);
+    --color-accent-green: var(--color-accent-green-light);
+    --color-navbar-background: var(--color-navbar-background-light);
+    --color-navbar-border: var(--color-navbar-border-light);
 }
 
 [data-theme="dark"] {
-    --color-bg-dark: #121212;
+    /* General colors */
+    /* Dark Theme Colors */
+
+    /* General colors */
+    --color-bg-dark: #15202B;
+    --color-border-dark: #38444D;
+    --color-text-primary-dark: #E1E8ED;
+    --color-text-secondary-dark: #8899A6;
+    --color-primary-dark: #1DA1F2;
+    --color-secondary-light-gray-dark: #192734;
+    --color-secondary-medium-gray-dark: #38444D;
+    --color-secondary-dark-gray-dark: #E1E8ED;
+    --color-accent-blue-dark: #1DA1F2;
+    --color-accent-red-dark: #FF5A79;
+    --color-accent-green-dark: #2ECC71;
+
+    /* NavBar */
+    --color-navbar-background-dark: rgba(21, 32, 43, 0.8);
+    --color-navbar-border-dark: rgba(29, 161, 242, 0.2);
 
     /* Semantic mapping */
-    --color-bg: var(--color-bg-dark)
+    --color-bg: var(--color-bg-dark);
+    --color-border: var(--color-border-dark);
+    --color-text-primary: var(--color-text-primary-dark);
+    --color-text-secondary: var(--color-text-secondary-dark);
+    --color-primary: var(--color-primary-dark);
+    --color-secondary-light-gray: var(--color-secondary-light-gray-dark);
+    --color-secondary-medium-gray: var(--color-secondary-medium-gray-dark);
+    --color-secondary-dark-gray: var(--color-secondary-dark-gray-dark);
+    --color-accent-blue: var(--color-accent-blue-dark);
+    --color-accent-red: var(--color-accent-red-dark);
+    --color-accent-green: var(--color-accent-green-dark);
+    --color-navbar-background: var(--color-navbar-background-dark);
+    --color-navbar-border: var(--color-navbar-border-dark);
 }
