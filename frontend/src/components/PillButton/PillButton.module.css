@@ -1,0 +1,21 @@
+.button {
+    text-decoration: none;
+    background-color: var(--color-accent-blue);
+    color: #FFFFFF; /* Fixed color regardless of dark mode */
+    padding: 0.5rem 1rem;
+    border-radius: 9999px; /* Pill shape */
+    font-weight: 600;
+    font-size: 16px;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #1A91DA; /* Slightly darker blue on hover */
+}
+
+.icon {
+    vertical-align: middle;
+    margin-top: 1px;
+}
