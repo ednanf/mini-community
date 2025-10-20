@@ -6,12 +6,13 @@ interface PillButtonProps {
     icon?: React.ReactNode;
     type: 'button' | 'submit' | 'reset';
     handleClick: () => void;
+    disabled?: boolean;
     children?: React.ReactNode;
 }
 
-const PillButton = ({ icon, type, handleClick, children }: PillButtonProps) => {
+const PillButton = ({ icon, type, handleClick, disabled, children }: PillButtonProps) => {
     return (
-        <button type={type} onClick={handleClick} className={styles.button}>
+        <button type={type} onClick={handleClick} className={styles.button} disabled={disabled}>
             <HStack align={'center'} justify={'center'} gap={'sm'}>
                 {children}
                 {/* Render icon if provided */}
