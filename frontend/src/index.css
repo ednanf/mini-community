@@ -23,11 +23,11 @@ h1, h2, h3, h4, h5, h6, p, div, span, a, button {
     --color-border-light: #e0e0e0; /* subtle borders in light mode */
     --color-text-primary-light: #14171A; /* main text */
     --color-text-secondary-light: #657786; /* secondary / muted text */
-    --color-primary-light: #2979FF; /* main interactive color */
+    --color-primary-light: #46A5FE; /* main interactive color */
     --color-secondary-light-gray-light: #F5F8FA; /* cards / surfaces */
     --color-secondary-medium-gray-light: #657786; /* secondary containers */
     --color-secondary-dark-gray-light: #14171A; /* darker text on lighter cards */
-    --color-accent-blue-light: #2979FF; /* links, buttons */
+    --color-accent-blue-light: #46A5FE; /* links, buttons */
     --color-accent-red-light: #E0245E; /* notifications / likes */
     --color-accent-green-light: #17BF63; /* success / online */
 
