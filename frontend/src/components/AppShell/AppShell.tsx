@@ -21,15 +21,19 @@ const AppShell = () => {
 
   return (
     <div className={styles.layout}>
-      <header>
-        <Header backButton={showBackButton}>{locationName}</Header>
-      </header>
+      {location.pathname !== '/' && (
+        <header>
+          <Header backButton={showBackButton}>{locationName}</Header>
+        </header>
+      )}
       <main className={styles.main}>
         <Outlet />
       </main>
-      <nav className={styles.nav}>
-        <NavBar />
-      </nav>
+      {location.pathname !== '/' && (
+        <nav className={styles.nav}>
+          <NavBar />
+        </nav>
+      )}
     </div>
   );
 };
