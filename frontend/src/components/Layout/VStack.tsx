@@ -6,12 +6,14 @@ interface VStackProps extends React.HTMLAttributes<HTMLDivElement> {
   gap?: SpacingKey | number | string;
   align?: 'start' | 'center' | 'end' | 'stretch';
   justify?: 'start' | 'center' | 'end' | 'between' | 'around';
+  textAlign?: 'left' | 'center' | 'right';
 }
 
 export const VStack: React.FC<VStackProps> = ({
   gap = 'sm',
   align = 'stretch',
   justify = 'start',
+  textAlign,
   className,
   style,
   children,
@@ -24,6 +26,7 @@ export const VStack: React.FC<VStackProps> = ({
     styles.vstack,
     align !== 'stretch' ? styles[`align${align.charAt(0).toUpperCase() + align.slice(1)}`] : '',
     styles[`justify${justify.charAt(0).toUpperCase() + justify.slice(1)}`],
+    textAlign ? styles[`textAlign${textAlign.charAt(0).toUpperCase() + textAlign.slice(1)}`] : '',
     className,
   ]
     .filter(Boolean)

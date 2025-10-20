@@ -7,6 +7,7 @@ interface HStackProps extends React.HTMLAttributes<HTMLDivElement> {
   align?: 'start' | 'center' | 'end';
   justify?: 'start' | 'center' | 'end' | 'between' | 'around';
   wrap?: boolean;
+  textAlign?: 'left' | 'center' | 'right';
 }
 
 export const HStack: React.FC<HStackProps> = ({
@@ -14,6 +15,7 @@ export const HStack: React.FC<HStackProps> = ({
   align = 'center',
   justify = 'start',
   wrap = false,
+  textAlign,
   className,
   style,
   children,
@@ -27,6 +29,7 @@ export const HStack: React.FC<HStackProps> = ({
     styles[`align${align.charAt(0).toUpperCase() + align.slice(1)}`],
     styles[`justify${justify.charAt(0).toUpperCase() + justify.slice(1)}`],
     wrap ? styles.wrap : '',
+    textAlign ? styles[`textAlign${textAlign.charAt(0).toUpperCase() + textAlign.slice(1)}`] : '',
     className,
   ]
     .filter(Boolean)
