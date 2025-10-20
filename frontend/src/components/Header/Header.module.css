@@ -1,0 +1,20 @@
+.header {
+    font-family: 'Inter', sans-serif;
+    position: relative;
+    width: 100%;
+    height: auto;
+    margin: 1.5rem 0;
+    background-color: rgba(255, 255, 255, 0.000001); /* necessary for backdrop-filter */
+    backdrop-filter: blur(10px);
+}
+
+.backButtonWrapper {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+}
+
+.children {
+    font-size: 1.3rem;
+}
