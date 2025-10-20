@@ -1,0 +1,14 @@
+.link {
+    text-decoration: none;
+    background-color: var(--color-accent-blue);
+    color: #FFFFFF; /* Fixed color regardless of dark mode */
+    padding: 0.5rem 1rem;
+    border-radius: 9999px; /* Pill shape */
+    font-weight: 600;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+}
+
+.link:hover {
+    background-color: #1A91DA; /* Slightly darker blue on hover */
+}
