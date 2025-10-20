@@ -7,6 +7,8 @@ interface VStackProps extends React.HTMLAttributes<HTMLDivElement> {
   align?: 'start' | 'center' | 'end' | 'stretch';
   justify?: 'start' | 'center' | 'end' | 'between' | 'around';
   textAlign?: 'left' | 'center' | 'right';
+  margin?: SpacingKey | number | string;
+  padding?: SpacingKey | number | string;
 }
 
 export const VStack: React.FC<VStackProps> = ({
@@ -14,13 +16,17 @@ export const VStack: React.FC<VStackProps> = ({
   align = 'stretch',
   justify = 'start',
   textAlign,
+  margin,
+  padding,
   className,
   style,
   children,
   ...props
 }) => {
-  const resolvedGap =
-    typeof gap === 'string' && gap in SPACING_SCALE ? SPACING_SCALE[gap as SpacingKey] : gap;
+  const resolveSpacing = (value: SpacingKey | number | string | undefined) =>
+    typeof value === 'string' && value in SPACING_SCALE
+      ? SPACING_SCALE[value as SpacingKey]
+      : value;
 
   const classes = [
     styles.vstack,
@@ -32,8 +38,15 @@ export const VStack: React.FC<VStackProps> = ({
     .filter(Boolean)
     .join(' ');
 
+  const componentStyle = {
+    gap: resolveSpacing(gap),
+    margin: resolveSpacing(margin),
+    padding: resolveSpacing(padding),
+    ...style,
+  };
+
   return (
-    <div className={classes} style={{ gap: resolvedGap, ...style }} {...props}>
+    <div className={classes} style={componentStyle} {...props}>
       {children}
     </div>
   );

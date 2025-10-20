@@ -8,6 +8,8 @@ interface HStackProps extends React.HTMLAttributes<HTMLDivElement> {
   justify?: 'start' | 'center' | 'end' | 'between' | 'around';
   wrap?: boolean;
   textAlign?: 'left' | 'center' | 'right';
+  margin?: SpacingKey | number | string;
+  padding?: SpacingKey | number | string;
 }
 
 export const HStack: React.FC<HStackProps> = ({
@@ -16,13 +18,17 @@ export const HStack: React.FC<HStackProps> = ({
   justify = 'start',
   wrap = false,
   textAlign,
+  margin,
+  padding,
   className,
   style,
   children,
   ...props
 }) => {
-  const resolvedGap =
-    typeof gap === 'string' && gap in SPACING_SCALE ? SPACING_SCALE[gap as SpacingKey] : gap;
+  const resolveSpacing = (value: SpacingKey | number | string | undefined) =>
+    typeof value === 'string' && value in SPACING_SCALE
+      ? SPACING_SCALE[value as SpacingKey]
+      : value;
 
   const classes = [
     styles.hstack,
@@ -35,8 +41,15 @@ export const HStack: React.FC<HStackProps> = ({
     .filter(Boolean)
     .join(' ');
 
+  const componentStyle = {
+    gap: resolveSpacing(gap),
+    margin: resolveSpacing(margin),
+    padding: resolveSpacing(padding),
+    ...style,
+  };
+
   return (
-    <div className={classes} style={{ gap: resolvedGap, ...style }} {...props}>
+    <div className={classes} style={componentStyle} {...props}>
       {children}
     </div>
   );
