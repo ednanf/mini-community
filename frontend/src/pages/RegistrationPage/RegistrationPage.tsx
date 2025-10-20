@@ -1,15 +1,13 @@
 import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { VStack } from '../../components/Layout/VStack.tsx';
-import { HStack } from '../../components/Layout/HStack.tsx';
-
-import InputField from '../../components/InputField/InputField.tsx';
-
-import PillButton from '../../components/PillButton/PillButton.tsx';
 import logo from '../../assets/logo-no-bg.png';
-import styles from './RegistrationPage.module.css';
+import InputField from '../../components/InputField/InputField.tsx';
+import { HStack } from '../../components/Layout/HStack.tsx';
+import { VStack } from '../../components/Layout/VStack.tsx';
+import PillButton from '../../components/PillButton/PillButton.tsx';
 import { postUnwrapped } from '../../utils/axiosInstance.ts';
+import styles from './RegistrationPage.module.css';
 
 type FormData = {
     nickname: string;
@@ -147,8 +145,14 @@ const RegistrationPage = () => {
             <VStack align={'center'}>
                 <img src={logo} alt="Logo" width={100} />
             </VStack>
+
             <form onSubmit={handleSubmit}>
-                <VStack margin={'lg'} gap={'lg'}>
+                <VStack
+                    margin={'lg'}
+                    padding={'md'}
+                    gap={'lg'}
+                    style={{ maxWidth: '400px', margin: 'auto' }}
+                >
                     <InputField
                         label={'Nickname'}
                         id={'nickname'}
@@ -204,6 +208,7 @@ const RegistrationPage = () => {
                     </HStack>
                 </VStack>
             </form>
+
             <VStack align={'center'}>
                 <p className={styles.footerText}>
                     Already have an account?{' '}

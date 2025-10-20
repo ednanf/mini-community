@@ -1,4 +1,5 @@
 .textInput {
+    width: 100%; /* Needed to ensure the field AND label will use all width*/
     display: flex;
     flex-direction: column;
 }
