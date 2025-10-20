@@ -1,0 +1,25 @@
+<svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect width="200" height="200" fill="black"/>
+    <circle cx="50" cy="50" r="15" fill="#42A5F5"/>
+    
+
+    <circle cx="140" cy="50" r="15" fill="#42A5F5"/>
+    <path d="M50 50 C60 40, 70 40, 80 50 C90 60, 100 60, 110 50 C120 40, 130 40, 140 50" stroke="#42A5F5"
+          stroke-width="15" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <circle cx="80" cy="80" r="15" fill="#42A5F5"/>
+    <circle cx="110" cy="80" r="15" fill="#42A5F5"/>
+    <path d="M80 50 C80 65, 80 65, 80 80" stroke="#42A5F5" stroke-width="15" fill="none" stroke-linecap="round"/>
+    <path d="M110 50 C110 65, 110 65, 110 80" stroke="#42A5F5" stroke-width="15" fill="none" stroke-linecap="round"/>
+
+    <circle cx="50" cy="80" r="15" fill="#9E9E9E"/>
+    <circle cx="50" cy="110" r="15" fill="#9E9E9E"/>
+    <circle cx="50" cy="140" r="15" fill="#9E9E9E"/>
+
+    <circle cx="80" cy="110" r="15" fill="#9E9E9E"/>
+    <circle cx="110" cy="110" r="15" fill="#9E9E9E"/>
+
+    <circle cx="140" cy="80" r="15" fill="#9E9E9E"/>
+    <circle cx="140" cy="110" r="15" fill="#9E9E9E"/>
+    <circle cx="140" cy="140" r="15" fill="#9E9E9E"/>
+</svg>
