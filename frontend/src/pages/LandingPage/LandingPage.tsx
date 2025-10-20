@@ -8,11 +8,11 @@ const LandingPage = () => {
   return (
     <VStack justify={'center'} align={'center'} gap={'lg'} textAlign={'center'} margin={'sm'}>
       <img src={logo} alt="Logo" className={styles.logo} />
-      <h2>Welcome to Mini Community! </h2>
-      <p>Your go-to platform for connecting with friends and sharing moments.</p>
+      <h2>Welcome to Mini Community</h2>
+      <p>Your go-to platform for connecting with friends and sharing moments</p>
       <p>Join us today and start your journey!</p>
       <VStack justify={'center'} align={'center'} gap={'sm'} margin={'lg'}>
-        <PillButtonLink to={'login'}>Get Started</PillButtonLink>
+        <PillButtonLink to={'register'}>Get Started</PillButtonLink>
         <p>or</p>
         <Link to="/login" className={styles.loginLink}>
           Log In
