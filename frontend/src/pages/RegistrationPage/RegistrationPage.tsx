@@ -146,7 +146,7 @@ const RegistrationPage = () => {
             // Needed for things like showing the correct nav bar options
             window.dispatchEvent(new Event('local-storage'));
 
-            toast.success('Registration successful!');
+            toast.success('Welcome aboard!');
 
             navigate('/global-feed');
         } catch (error) {
