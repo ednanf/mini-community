@@ -29,6 +29,8 @@ const postSchema = new Schema<IPost>(
     { timestamps: true },
 );
 
+postSchema.index({ createdAt: -1 });
+
 const Post = mongoose.model<IPost>('Post', postSchema);
 
 export default Post;

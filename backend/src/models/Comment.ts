@@ -31,6 +31,8 @@ const commentSchema = new Schema<IComment>(
     { timestamps: true },
 );
 
+commentSchema.index({ parentPost: 1, createdBy: 1 });
+
 const Comment = mongoose.model<IComment>('Comment', commentSchema);
 
 export default Comment;

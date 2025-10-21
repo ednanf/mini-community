@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import logo from '../../assets/logo-no-bg.png';
-import InputField from '../../components/InputField/InputField.tsx';
+import InputField from '../../components/Forms/InputField/InputField.tsx';
 import { HStack } from '../../components/Layout/HStack.tsx';
 import { VStack } from '../../components/Layout/VStack.tsx';
-import PillButton from '../../components/PillButton/PillButton.tsx';
+import PillButton from '../../components/Buttons/PillButton/PillButton.tsx';
 import { postUnwrapped } from '../../utils/axiosInstance.ts';
 import styles from './RegistrationPage.module.css';
 

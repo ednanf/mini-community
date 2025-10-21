@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './InputField.module.css';
-import { VStack } from '../Layout/VStack.tsx';
+import { VStack } from '../../Layout/VStack.tsx';
 
 type InputFieldProps = {
     label?: string;

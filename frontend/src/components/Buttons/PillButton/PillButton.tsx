@@ -1,6 +1,6 @@
 import React from 'react';
 import styles from './PillButton.module.css';
-import { HStack } from '../Layout/HStack.tsx';
+import { HStack } from '../../Layout/HStack.tsx';
 
 interface PillButtonProps {
     icon?: React.ReactNode;
@@ -10,9 +10,20 @@ interface PillButtonProps {
     children?: React.ReactNode;
 }
 
-const PillButton = ({ icon, type, handleClick, disabled, children }: PillButtonProps) => {
+const PillButton = ({
+    icon,
+    type,
+    handleClick,
+    disabled,
+    children,
+}: PillButtonProps) => {
     return (
-        <button type={type} onClick={handleClick} className={styles.button} disabled={disabled}>
+        <button
+            type={type}
+            onClick={handleClick}
+            className={styles.button}
+            disabled={disabled}
+        >
             <HStack align={'center'} justify={'center'} gap={'sm'}>
                 {children}
                 {/* Render icon if provided */}
