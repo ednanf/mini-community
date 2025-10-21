@@ -10,8 +10,8 @@
     -moz-user-select: none;
     -ms-user-select: none;
     background-color: var(--color-navbar-background);
-    backdrop-filter: blur(10px);
-    --webkit-backdrop-filter: blur(10px);
+    backdrop-filter: var(--navbar-backdrop-filter);
+    --webkit-backdrop-filter: var(--navbar-backdrop-filter);
     padding: 0.7rem;
     border-radius: 50%;
     border: 1px solid var(--color-navbar-border);
