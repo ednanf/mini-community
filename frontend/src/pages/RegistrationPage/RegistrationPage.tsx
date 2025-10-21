@@ -58,7 +58,12 @@ const RegistrationPage = () => {
 
     // Validate form data
     const validate = (data: FormData) => {
-        const newErrors: FormData = { nickname: '', email: '', password: '', confirmPassword: '' };
+        const newErrors: FormData = {
+            nickname: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+        };
         if (!data.nickname) {
             newErrors.nickname = 'Nickname is required';
         }
@@ -87,10 +92,14 @@ const RegistrationPage = () => {
         // Validate password confirmation
         if (name === 'password' || name === 'confirmPassword') {
             const password = name === 'password' ? value : formData.password;
-            const confirmPassword = name === 'confirmPassword' ? value : formData.confirmPassword;
+            const confirmPassword =
+                name === 'confirmPassword' ? value : formData.confirmPassword;
 
             if (confirmPassword && password !== confirmPassword) {
-                setErrors({ ...errors, confirmPassword: 'Passwords do not match' });
+                setErrors({
+                    ...errors,
+                    confirmPassword: 'Passwords do not match',
+                });
             } else {
                 setErrors({ ...errors, confirmPassword: '' });
             }
@@ -101,7 +110,12 @@ const RegistrationPage = () => {
         e.preventDefault();
 
         // Reset errors
-        setErrors({ nickname: '', email: '', password: '', confirmPassword: '' });
+        setErrors({
+            nickname: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+        });
 
         // Basic validation - Zod will validate on the backend
         // This is just to provide immediate feedback to the user
@@ -119,7 +133,10 @@ const RegistrationPage = () => {
         setIsLoading(true);
 
         try {
-            const response = await postUnwrapped<RegistrationResponse>('auth/register', formData);
+            const response = await postUnwrapped<RegistrationResponse>(
+                'auth/register',
+                formData,
+            );
 
             localStorage.setItem('nickname', response.nickname);
             localStorage.setItem('email', response.email);
@@ -134,7 +151,9 @@ const RegistrationPage = () => {
             navigate('/global-feed');
         } catch (error) {
             const apiError = error as ApiError;
-            toast.error(apiError.message || 'Registration failed. Please try again.');
+            toast.error(
+                apiError.message || 'Registration failed. Please try again.',
+            );
         } finally {
             setIsLoading(false);
         }
@@ -212,7 +231,7 @@ const RegistrationPage = () => {
             <VStack align={'center'}>
                 <p className={styles.footerText}>
                     Already have an account?{' '}
-                    <Link to={'login'} className={styles.link}>
+                    <Link to={'../login'} className={styles.link}>
                         Log in here
                     </Link>
                 </p>
