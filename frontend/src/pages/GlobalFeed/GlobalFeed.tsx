@@ -1,3 +1,8 @@
+import PostCard from '../../components/PostCard/PostCard.tsx';
+import { VStack } from '../../components/Layout/VStack.tsx';
+
+import userPlaceholder from '../../assets/user-placeholder.png';
+
 const testData = {
     message: 'Posts retrieved successfully',
     posts: [
@@ -33,6 +38,33 @@ const testData = {
 };
 
 const GlobalFeed = () => {
-    return <div>GlobalFeed</div>;
+    return (
+        <VStack>
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+            <PostCard image={userPlaceholder} />
+        </VStack>
+    );
 };
 export default GlobalFeed;

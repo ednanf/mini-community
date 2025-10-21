@@ -8,6 +8,7 @@
 }
 
 .main {
+    padding-top: calc(1.5rem + 3rem); /* 1.5rem for spacing below header, 3rem for header height */
     flex-grow: 1;
 }
 

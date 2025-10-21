@@ -35,6 +35,9 @@ h1, h2, h3, h4, h5, h6, p, div, span, a, button {
     --color-navbar-background-light: rgba(255, 255, 255, 0.4);
     --color-navbar-border-light: rgba(255, 255, 255, 0.4);
 
+    /* Post and comments cards */
+    --color-card-bg-light: #FFFFFF;
+
     /* Semantic mapping */
     --color-bg: var(--color-bg-light);
     --color-border: var(--color-border-light);
@@ -49,6 +52,7 @@ h1, h2, h3, h4, h5, h6, p, div, span, a, button {
     --color-accent-green: var(--color-accent-green-light);
     --color-navbar-background: var(--color-navbar-background-light);
     --color-navbar-border: var(--color-navbar-border-light);
+    --color-card-bg: var(--color-card-bg-light);
 }
 
 [data-theme="dark"] {
@@ -72,6 +76,9 @@ h1, h2, h3, h4, h5, h6, p, div, span, a, button {
     --color-navbar-background-dark: rgba(21, 32, 43, 0.8);
     --color-navbar-border-dark: rgba(29, 161, 242, 0.2);
 
+    /* Post and comments cards */
+    --color-card-bg-dark: #000000;
+
     /* Semantic mapping */
     --color-bg: var(--color-bg-dark);
     --color-border: var(--color-border-dark);
@@ -86,4 +93,5 @@ h1, h2, h3, h4, h5, h6, p, div, span, a, button {
     --color-accent-green: var(--color-accent-green-dark);
     --color-navbar-background: var(--color-navbar-background-dark);
     --color-navbar-border: var(--color-navbar-border-dark);
+    --color-card-bg: var(--color-card-bg-dark);
 }
