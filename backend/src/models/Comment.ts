@@ -3,7 +3,7 @@ import mongoose, { Schema } from 'mongoose';
 export interface IComment {
     createdBy: Schema.Types.ObjectId;
     parentPost: Schema.Types.ObjectId;
-    content: string;
+    commentContent: string;
     createdAt?: Date;
     updatedAt?: Date;
 }
@@ -20,7 +20,7 @@ const commentSchema = new Schema<IComment>(
             ref: 'Post',
             required: true,
         },
-        content: {
+        commentContent: {
             type: String,
             trim: true,
             required: true,

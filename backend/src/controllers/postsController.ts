@@ -50,7 +50,7 @@ const getPosts = async (req: Request, res: Response, next: NextFunction) => {
             status: 'success',
             data: {
                 message: 'Posts retrieved successfully',
-                content: posts,
+                posts: posts,
                 nextCursor,
             },
         };
@@ -73,18 +73,18 @@ const createPost = async (
             return;
         }
 
-        const { content } = req.body; // Validated by middleware
+        const { postContent } = req.body; // Validated by middleware
 
         const newPost: IPost = await Post.create({
             createdBy: userId,
-            content,
+            postContent,
         });
 
         const response: ApiResponse<PostCreateSuccess> = {
             status: 'success',
             data: {
                 message: 'Post created successfully',
-                content: newPost,
+                postContent: newPost,
             },
         };
 
@@ -99,9 +99,11 @@ const getPostById = async (req: Request, res: Response, next: NextFunction) => {
         const { id } = req.params; // Validated by middleware
 
         const post = await Post.findOne({ _id: id }).populate({
-            path: 'createdBy',
-            select: 'nickname',
+            path: 'postComments',
+            select: 'commentContent createdBy',
+            populate: { path: 'createdBy', select: 'nickname' },
         });
+
         if (!post) {
             next(new NotFoundError('Post not found.'));
             return;
@@ -111,7 +113,7 @@ const getPostById = async (req: Request, res: Response, next: NextFunction) => {
             status: 'success',
             data: {
                 message: 'Post retrieved successfully',
-                content: post,
+                postContent: post,
             },
         };
 

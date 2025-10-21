@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { userLoginSchema, userPatchSchema, userRegisterSchema } from '../schemas/userSchemas';
+import {
+    userLoginSchema,
+    userPatchSchema,
+    userRegisterSchema,
+} from '../schemas/userSchemas';
 import { IPost } from '../models/Post';
 import { IComment } from '../models/Comment';
 
@@ -113,17 +117,17 @@ export interface PostBase {
 }
 
 export interface PostsGetSuccess extends PostBase {
-    content: IPost[];
+    posts: IPost[];
     nextCursor: string | null; // null if there are no more posts to fetch
 }
 
 export interface PostCreateSuccess {
     message: string;
-    content: IPost;
+    postContent: IPost;
 }
 
 export interface PostGetByIdSuccess extends PostBase {
-    content: IPost;
+    postContent: IPost;
 }
 
 export interface PostDeleteSuccess extends PostBase {
@@ -139,12 +143,12 @@ export interface CommentBase {
 }
 
 export interface CommentGetSuccess extends CommentBase {
-    content: IComment[];
+    comments: IComment[];
     nextCursor: string | null; // null if there are no more comments to fetch
 }
 
 export interface CommentCreateSuccess extends CommentBase {
-    content: IComment;
+    commentContent: IComment;
 }
 
 export interface CommentDeleteSuccess extends CommentBase {

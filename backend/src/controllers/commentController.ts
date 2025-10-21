@@ -10,6 +10,7 @@ import {
 import { StatusCodes } from 'http-status-codes';
 import { NotFoundError, UnauthenticatedError } from '../errors';
 import { AuthenticatedRequest } from '../types/express';
+import Post from '../models/Post';
 
 const getComments = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -54,7 +55,7 @@ const getComments = async (req: Request, res: Response, next: NextFunction) => {
             status: 'success',
             data: {
                 message: 'Comments retrieved successfully',
-                content: comments,
+                comments: comments,
                 nextCursor,
             },
         };
@@ -71,7 +72,7 @@ const createComment = async (
     next: NextFunction,
 ) => {
     try {
-        const { userId } = req.user;
+        const { userId } = req.user; // Retrieved from authentication middleware
         if (!userId) {
             next(new UnauthenticatedError('User not authenticated'));
             return;
@@ -83,19 +84,25 @@ const createComment = async (
             return;
         }
 
-        const { content } = req.body; // Validated by middleware
+        const { commentContent } = req.body; // Validated by middleware
 
+        // Create the new comment to get its _id
         const newComment = await Comment.create({
             createdBy: userId,
             parentPost: postId,
-            content,
+            commentContent,
+        });
+
+        // Update the parent Post by pushing the new comment's _id
+        await Post.findByIdAndUpdate(postId, {
+            $push: { postComments: newComment._id },
         });
 
         const response: ApiResponse<CommentCreateSuccess> = {
             status: 'success',
             data: {
                 message: 'Comment created successfully',
-                content: newComment,
+                commentContent: newComment,
             },
         };
 
