@@ -21,7 +21,10 @@ const getComments = async (req: Request, res: Response, next: NextFunction) => {
         const limit = parseInt(queryLimit as string, 10) || 20; // Default limit to 20
 
         // 3. Database query, sorted by '_id' in descending order
-        const query: { parentPost: string; _id?: { $lt: mongoose.Types.ObjectId } } = {
+        const query: {
+            parentPost: string;
+            _id?: { $lt: mongoose.Types.ObjectId };
+        } = {
             parentPost: postId,
         };
         if (cursor && typeof cursor === 'string') {
@@ -29,10 +32,12 @@ const getComments = async (req: Request, res: Response, next: NextFunction) => {
         }
 
         // 4. Fetch one more item than the requested limit to check if there's a next page
-        const comments: (IComment & { _id: mongoose.Types.ObjectId })[] = await Comment.find(query)
-            .sort({ _id: -1 })
-            .limit(limit + 1)
-            .lean();
+        const comments: (IComment & { _id: mongoose.Types.ObjectId })[] =
+            await Comment.find(query)
+                .sort({ _id: -1 })
+                .limit(limit + 1)
+                .lean()
+                .populate({ path: 'createdBy', select: 'nickname' });
 
         // 5. Check if there is a next page
         const hasNextPage = comments.length > limit;
@@ -41,7 +46,9 @@ const getComments = async (req: Request, res: Response, next: NextFunction) => {
         }
 
         // 6. Determine the next cursor
-        const nextCursor = hasNextPage ? comments[comments.length - 1]._id.toString() : null;
+        const nextCursor = hasNextPage
+            ? comments[comments.length - 1]._id.toString()
+            : null;
 
         const response: ApiResponse<CommentGetSuccess> = {
             status: 'success',
@@ -58,7 +65,11 @@ const getComments = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const createComment = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const createComment = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+) => {
     try {
         const { userId } = req.user;
         if (!userId) {
@@ -74,7 +85,11 @@ const createComment = async (req: AuthenticatedRequest, res: Response, next: Nex
 
         const { content } = req.body; // Validated by middleware
 
-        const newComment = await Comment.create({ createdBy: userId, parentPost: postId, content });
+        const newComment = await Comment.create({
+            createdBy: userId,
+            parentPost: postId,
+            content,
+        });
 
         const response: ApiResponse<CommentCreateSuccess> = {
             status: 'success',
@@ -90,7 +105,11 @@ const createComment = async (req: AuthenticatedRequest, res: Response, next: Nex
     }
 };
 
-const deleteComment = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const deleteComment = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+) => {
     try {
         const { userId } = req.user;
         if (!userId) {

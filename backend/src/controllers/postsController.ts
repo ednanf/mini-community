@@ -27,10 +27,12 @@ const getPosts = async (req: Request, res: Response, next: NextFunction) => {
 
         // 3. Fetch one more item than the requested limit to check if there's a next page
         // Best approach to avoid a second DB query
-        const posts: (IPost & { _id: mongoose.Types.ObjectId })[] = await Post.find(query)
-            .sort({ _id: -1 })
-            .limit(limit + 1)
-            .lean();
+        const posts: (IPost & { _id: mongoose.Types.ObjectId })[] =
+            await Post.find(query)
+                .sort({ _id: -1 })
+                .limit(limit + 1)
+                .lean()
+                .populate({ path: 'createdBy', select: 'nickname' });
 
         // 4. Check if there is a next page
         const hasNextPage = posts.length > limit;
@@ -40,7 +42,9 @@ const getPosts = async (req: Request, res: Response, next: NextFunction) => {
 
         // 5. Determine the next cursor
         // It's the _id of the *last* item in the current list, if there isn't a next page, it's null
-        const nextCursor = hasNextPage ? posts[posts.length - 1]._id.toString() : null;
+        const nextCursor = hasNextPage
+            ? posts[posts.length - 1]._id.toString()
+            : null;
 
         const response: ApiResponse<PostsGetSuccess> = {
             status: 'success',
@@ -57,7 +61,11 @@ const getPosts = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const createPost = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const createPost = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+) => {
     try {
         const { userId } = req.user;
         if (!userId) {
@@ -67,7 +75,10 @@ const createPost = async (req: AuthenticatedRequest, res: Response, next: NextFu
 
         const { content } = req.body; // Validated by middleware
 
-        const newPost: IPost = await Post.create({ createdBy: userId, content });
+        const newPost: IPost = await Post.create({
+            createdBy: userId,
+            content,
+        });
 
         const response: ApiResponse<PostCreateSuccess> = {
             status: 'success',
@@ -87,7 +98,10 @@ const getPostById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params; // Validated by middleware
 
-        const post = await Post.findOne({ _id: id });
+        const post = await Post.findOne({ _id: id }).populate({
+            path: 'createdBy',
+            select: 'nickname',
+        });
         if (!post) {
             next(new NotFoundError('Post not found.'));
             return;
@@ -107,14 +121,25 @@ const getPostById = async (req: Request, res: Response, next: NextFunction) => {
     }
 };
 
-const deletePost = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const deletePost = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+) => {
     try {
         const { id: postId } = req.params;
         const { userId } = req.user;
 
-        const postToDelete = await Post.findOneAndDelete({ _id: postId, createdBy: userId });
+        const postToDelete = await Post.findOneAndDelete({
+            _id: postId,
+            createdBy: userId,
+        });
         if (!postToDelete) {
-            next(new NotFoundError('Post not found or you do not have permission to delete it.'));
+            next(
+                new NotFoundError(
+                    'Post not found or you do not have permission to delete it.',
+                ),
+            );
             return;
         }
 
