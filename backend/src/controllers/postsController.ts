@@ -11,6 +11,11 @@ import {
 import { StatusCodes } from 'http-status-codes';
 import { AuthenticatedRequest } from '../types/express';
 import { NotFoundError, UnauthenticatedError } from '../errors';
+import User from '../models/User';
+
+interface UserWithFollowing {
+    following: mongoose.Types.ObjectId[];
+}
 
 const getPosts = async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -94,6 +99,155 @@ const createPost = async (
     }
 };
 
+const getMyPosts = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+) => {
+    try {
+        const { userId } = req.user;
+        if (!userId) {
+            next(new UnauthenticatedError('User not authenticated.'));
+            return;
+        }
+
+        // 1. Get 'limit' and 'cursor' from query parameters
+        const { limit: queryLimit, cursor } = req.query;
+        const limit = parseInt(queryLimit as string, 10) || 20; // Default limit to 20
+
+        // 2. Database query, sorted by '_id' in descending order
+        const query: {
+            createdBy: mongoose.Types.ObjectId;
+            _id?: { $lt: mongoose.Types.ObjectId };
+        } = {
+            createdBy: new mongoose.Types.ObjectId(userId),
+        };
+
+        if (cursor && typeof cursor === 'string') {
+            // If a cursor is provided, fetch items with _id less than (older than) the cursor
+            query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+        }
+
+        // 3. Fetch one more item than the requested limit to check if there's a next page
+        const posts: (IPost & { _id: mongoose.Types.ObjectId })[] =
+            await Post.find(query)
+                .sort({ _id: -1 })
+                .limit(limit + 1)
+                .lean()
+                .populate({ path: 'createdBy', select: 'nickname' });
+
+        // 4. Check if there is a next page
+        const hasNextPage = posts.length > limit;
+        if (hasNextPage) {
+            posts.pop(); // Remove the extra item used to check for next page
+        }
+
+        // 5. Determine the next cursor
+        const nextCursor = hasNextPage
+            ? posts[posts.length - 1]._id.toString()
+            : null;
+
+        const response: ApiResponse<PostsGetSuccess> = {
+            status: 'success',
+            data: {
+                message: 'Your own posts retrieved successfully',
+                posts: posts,
+                nextCursor,
+            },
+        };
+
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
+};
+
+const getFollowedUsersPosts = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+) => {
+    try {
+        const { userId } = req.user;
+        if (!userId) {
+            next(new UnauthenticatedError('User not authenticated.'));
+            return;
+        }
+
+        // 1. Find the current user to get their 'following' list
+        const user = await User.findById(userId)
+            .select('following')
+            .lean<UserWithFollowing>();
+        if (!user) {
+            next(new NotFoundError('User not found.'));
+            return;
+        }
+
+        // Extract the following list if it exists
+        const { following } = user;
+
+        // If the user isn't following anyone, no need to query for posts.
+        if (!following || following.length === 0) {
+            const response: ApiResponse<PostsGetSuccess> = {
+                status: 'success',
+                data: {
+                    message: 'You are not following anyone yet.',
+                    posts: [],
+                    nextCursor: null,
+                },
+            };
+            return res.status(StatusCodes.OK).json(response);
+        }
+
+        // 2. Get 'limit' and 'cursor' from query parameters
+        const { limit: queryLimit, cursor } = req.query;
+        const limit = parseInt(queryLimit as string, 10) || 20; // Default limit to 20
+
+        // 3. Database query to fetch posts from followed users
+        const query: {
+            createdBy: { $in: mongoose.Types.ObjectId[] };
+            _id?: { $lt: mongoose.Types.ObjectId };
+        } = {
+            createdBy: { $in: following },
+        };
+
+        if (cursor && typeof cursor === 'string') {
+            query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+        }
+
+        // 4. Fetch one more item than the requested limit
+        const posts: (IPost & { _id: mongoose.Types.ObjectId })[] =
+            await Post.find(query)
+                .sort({ _id: -1 })
+                .limit(limit + 1)
+                .lean()
+                .populate({ path: 'createdBy', select: 'nickname' });
+
+        // 5. Check for next page and determine the next cursor
+        const hasNextPage = posts.length > limit;
+        if (hasNextPage) {
+            posts.pop();
+        }
+
+        const nextCursor = hasNextPage
+            ? posts[posts.length - 1]._id.toString()
+            : null;
+
+        const response: ApiResponse<PostsGetSuccess> = {
+            status: 'success',
+            data: {
+                message: 'Posts from followed users retrieved successfully',
+                posts: posts,
+                nextCursor,
+            },
+        };
+
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
+};
+
 const getPostById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params; // Validated by middleware
@@ -159,4 +313,11 @@ const deletePost = async (
     }
 };
 
-export { getPosts, createPost, getPostById, deletePost };
+export {
+    getPosts,
+    createPost,
+    getMyPosts,
+    getFollowedUsersPosts,
+    getPostById,
+    deletePost,
+};

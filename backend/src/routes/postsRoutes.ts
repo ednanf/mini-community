@@ -1,7 +1,14 @@
 import express, { RequestHandler } from 'express';
 import { xss } from 'express-xss-sanitizer';
 import authenticate from '../middlewares/authenticate';
-import { getPosts, createPost, getPostById, deletePost } from '../controllers/postsController';
+import {
+    getPosts,
+    createPost,
+    getMyPosts,
+    getFollowedUsersPosts,
+    getPostById,
+    deletePost,
+} from '../controllers/postsController';
 import commentsRouter from '../routes/commentsRoutes'; // Needed for nested routes
 import validateObjectId from '../middlewares/validateObjectId';
 import validateWithZod from '../middlewares/validateWithZod';
@@ -9,11 +16,28 @@ import postCreateSchema from '../schemas/postSchemas';
 
 const router = express.Router();
 
+// Unauthenticated route for global feed
+router.route('/').get(getPosts);
+
+// Authenticated route for user's own posts
+router.route('/my-posts').get(authenticate, getMyPosts as RequestHandler);
+
+// Authenticated route for user's personalized feed (followed users)
+router
+    .route('/feed')
+    .get(authenticate, getFollowedUsersPosts as RequestHandler);
+
+// Authenticated route for creating a new post
 router
     .route('/')
-    .get(getPosts)
-    .post(authenticate, xss(), validateWithZod(postCreateSchema), createPost as RequestHandler);
+    .post(
+        authenticate,
+        xss(),
+        validateWithZod(postCreateSchema),
+        createPost as RequestHandler,
+    );
 
+// Routes for specific post by ID
 router
     .route('/:id')
     .get(validateObjectId('id'), getPostById)
