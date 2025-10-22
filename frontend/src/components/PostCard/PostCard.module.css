@@ -2,11 +2,11 @@
     margin: 0 1rem;
     background-color: #FFFFFF;
     border: 1px solid var(--color-border);
-    border-radius: 9999px;
+    border-radius: 30px;
 }
 
-.cardBody:nth-child(1) {
-    margin-top: 1rem;
+.cardBody:nth-last-child(1) {
+    margin-bottom: 4rem;
 }
 
 .profileImage {
