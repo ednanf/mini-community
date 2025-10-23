@@ -42,10 +42,12 @@ export interface UserBase {
 }
 
 export interface UserRegisterSuccess extends UserBase {
+    id: string;
     token: string;
 }
 
 export interface UserLoginSuccess extends UserBase {
+    id: string;
     token: string;
 }
 
@@ -108,6 +110,11 @@ export interface UserFollowSuccess {
 export interface UserUnfollowSuccess {
     message: string;
     unfollowedUser: string;
+}
+
+export interface UserIsFollowingSuccess {
+    message: string;
+    isFollowing: boolean;
 }
 
 /*
