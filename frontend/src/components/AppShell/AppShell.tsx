@@ -25,17 +25,6 @@ const AppShell = () => {
         .replaceAll('-', ' ')
         .replace(/^\w/, (c) => c.toUpperCase());
 
-    // Routes that should show the back button
-    const staticPaths = ['/new-post', '/edit-profile'];
-    const dynamicPathPrefixes = ['/post/', '/user/'];
-
-    // Determine if the back button should be shown based on the routes above
-    const showBackButton =
-        staticPaths.includes(location.pathname) ||
-        dynamicPathPrefixes.some((prefix) =>
-            location.pathname.startsWith(prefix),
-        );
-
     // Update token state on localStorage changes
     useEffect(() => {
         const handleStorageChange = () => {
@@ -65,7 +54,7 @@ const AppShell = () => {
         <div className={styles.layout}>
             {showLayout && (
                 <header>
-                    <Header backButton={showBackButton}>{locationName}</Header>
+                    <Header>{locationName}</Header>
                 </header>
             )}
             <main className={styles.main}>
