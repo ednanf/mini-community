@@ -21,6 +21,10 @@
     color: var(--color-text-primary);
 }
 
+.nickname:hover {
+    text-decoration: underline;
+}
+
 .timestamp {
     color: var(--color-text-secondary);
     font-size: 0.8rem
