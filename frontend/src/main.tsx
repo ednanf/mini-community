@@ -20,28 +20,28 @@ import ViewProfile from './pages/ViewProfile/ViewProfile.tsx';
 import './index.css';
 
 const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <AppShell />,
-    children: [
-      { index: true, element: <LandingPage /> },
-      { path: 'login', element: <LoginPage /> },
-      { path: 'register', element: <RegistrationPage /> },
-      { path: 'global-feed', element: <GlobalFeed /> },
-      { path: 'my-feed', element: <MyFeed /> },
-      { path: 'my-profile', element: <MyProfile /> },
-      { path: 'edit-profile', element: <EditProfile /> },
-      { path: 'profile/:userId', element: <ViewProfile /> },
-      { path: 'post/:postId', element: <PostDetails /> },
-      { path: 'new-post', element: <NewPost /> },
-      { path: 'settings', element: <Settings /> },
-      { path: '*', element: <NotFound /> },
-    ],
-  },
+    {
+        path: '/',
+        element: <AppShell />,
+        children: [
+            { index: true, element: <LandingPage /> },
+            { path: 'login', element: <LoginPage /> },
+            { path: 'register', element: <RegistrationPage /> },
+            { path: 'global-feed', element: <GlobalFeed /> },
+            { path: 'my-feed', element: <MyFeed /> },
+            { path: 'my-profile', element: <MyProfile /> },
+            { path: 'edit-profile', element: <EditProfile /> },
+            { path: 'profile/:userId', element: <ViewProfile /> },
+            { path: 'post/:postId', element: <PostDetails /> },
+            { path: 'new-post', element: <NewPost /> },
+            { path: 'settings', element: <Settings /> },
+            { path: '*', element: <NotFound /> },
+        ],
+    },
 ]);
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
+    <StrictMode>
+        <RouterProvider router={router} />
+    </StrictMode>,
 );
