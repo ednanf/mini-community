@@ -53,8 +53,10 @@ export interface UserLogoutSuccess {
     message: string;
 }
 
-export interface UserMeSuccess extends UserBase {
+export interface UserMeSuccess extends Partial<UserBase> {
     id: string;
+    bio?: string | null;
+    avatarUrl?: string | null;
 }
 
 /*
