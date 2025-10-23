@@ -162,6 +162,7 @@ const MyFeed = () => {
                             nickname={p.createdBy.nickname}
                             postBody={p.postContent}
                             date={p.createdAt}
+                            authorId={p.createdBy._id}
                         />
                     ))}
                     {hasMore && (
