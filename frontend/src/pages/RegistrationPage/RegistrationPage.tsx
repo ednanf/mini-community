@@ -17,6 +17,7 @@ type FormData = {
 };
 
 type RegistrationResponse = {
+    id: string;
     message: string;
     nickname: string;
     email: string;
@@ -138,6 +139,7 @@ const RegistrationPage = () => {
                 formData,
             );
 
+            localStorage.setItem('id', response.id);
             localStorage.setItem('nickname', response.nickname);
             localStorage.setItem('email', response.email);
             localStorage.setItem('token', response.token);

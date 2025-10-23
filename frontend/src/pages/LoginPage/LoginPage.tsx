@@ -15,6 +15,7 @@ type FormData = {
 };
 
 type LoginResponse = {
+    id: string;
     message: string;
     nickname: string;
     email: string;
@@ -93,6 +94,7 @@ const LoginPage = () => {
                 formData,
             );
 
+            localStorage.setItem('id', response.id);
             localStorage.setItem('nickname', response.nickname);
             localStorage.setItem('email', response.email);
             localStorage.setItem('token', response.token);
