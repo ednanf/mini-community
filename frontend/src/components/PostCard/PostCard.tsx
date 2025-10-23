@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { VStack } from '../Layout/VStack.tsx';
 import { HStack } from '../Layout/HStack.tsx';
 import mongodbDateFormatter from '../../utils/mongodbDateFormatter.ts';
@@ -6,11 +7,18 @@ import styles from './PostCard.module.css';
 interface PostCardProps {
     image: string;
     nickname: string;
+    authorId: string;
     postBody: string;
     date: string;
 }
 
-const PostCard = ({ image, nickname, postBody, date }: PostCardProps) => {
+const PostCard = ({
+    image,
+    nickname,
+    authorId,
+    postBody,
+    date,
+}: PostCardProps) => {
     const formattedDate = mongodbDateFormatter(date);
 
     return (
@@ -22,7 +30,15 @@ const PostCard = ({ image, nickname, postBody, date }: PostCardProps) => {
                     className={styles.profileImage}
                 />
                 <VStack>
-                    <p className={styles.nickname}>@{nickname}</p>
+                    <div className={styles.nickname}>
+                        <Link
+                            to={`../profile/${authorId}`}
+                            className={styles.nickname}
+                        >
+                            @{nickname}
+                        </Link>
+                    </div>
+
                     <p>{postBody}</p>
                     <HStack>
                         <p className={styles.timestamp}>{formattedDate}</p>

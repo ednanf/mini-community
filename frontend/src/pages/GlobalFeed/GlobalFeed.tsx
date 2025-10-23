@@ -160,6 +160,7 @@ const GlobalFeed = () => {
                             key={p._id}
                             image={userPlaceholder}
                             nickname={p.createdBy.nickname}
+                            authorId={p._id}
                             postBody={p.postContent}
                             date={p.createdAt}
                         />
