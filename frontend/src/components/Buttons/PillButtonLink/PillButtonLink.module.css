@@ -5,8 +5,9 @@
     padding: 0.5rem 1rem;
     border-radius: 9999px; /* Pill shape */
     font-weight: 600;
-    display: inline-block;
     transition: background-color 0.3s ease;
+    justify-content: center;
+    display: flex;
 }
 
 .link:hover {
