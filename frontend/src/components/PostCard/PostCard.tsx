@@ -38,7 +38,6 @@ const PostCard = ({
                             @{nickname}
                         </Link>
                     </div>
-
                     <p>{postBody}</p>
                     <HStack>
                         <p className={styles.timestamp}>{formattedDate}</p>
