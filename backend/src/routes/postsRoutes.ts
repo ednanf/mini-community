@@ -8,6 +8,7 @@ import {
     getFollowedUsersPosts,
     getPostById,
     deletePost,
+    getPostsByUserId,
 } from '../controllers/postsController';
 import commentsRouter from '../routes/commentsRoutes'; // Needed for nested routes
 import validateObjectId from '../middlewares/validateObjectId';
@@ -26,6 +27,11 @@ router.route('/my-posts').get(authenticate, getMyPosts as RequestHandler);
 router
     .route('/feed')
     .get(authenticate, getFollowedUsersPosts as RequestHandler);
+
+// Route for getting all posts from a specific user
+router
+    .route('/user/:id')
+    .get(validateObjectId('id'), getPostsByUserId as RequestHandler);
 
 // Authenticated route for creating a new post
 router

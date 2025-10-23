@@ -248,6 +248,65 @@ const getFollowedUsersPosts = async (
     }
 };
 
+const getPostsByUserId = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
+    try {
+        const { id: userId } = req.params; // Get user ID from URL params
+
+        // 1. Get 'limit' and 'cursor' from query parameters
+        const { limit: queryLimit, cursor } = req.query;
+        const limit = parseInt(queryLimit as string, 10) || 20; // Default limit to 20
+
+        // 2. Database query, sorted by '_id' in descending order
+        const query: {
+            createdBy: mongoose.Types.ObjectId;
+            _id?: { $lt: mongoose.Types.ObjectId };
+        } = {
+            createdBy: new mongoose.Types.ObjectId(userId),
+        };
+
+        if (cursor && typeof cursor === 'string') {
+            // If a cursor is provided, fetch items with _id less than (older than) the cursor
+            query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+        }
+
+        // 3. Fetch one more item than the requested limit to check if there's a next page
+        const posts: (IPost & { _id: mongoose.Types.ObjectId })[] =
+            await Post.find(query)
+                .sort({ _id: -1 })
+                .limit(limit + 1)
+                .lean()
+                .populate({ path: 'createdBy', select: 'nickname' });
+
+        // 4. Check if there is a next page
+        const hasNextPage = posts.length > limit;
+        if (hasNextPage) {
+            posts.pop(); // Remove the extra item used to check for next page
+        }
+
+        // 5. Determine the next cursor
+        const nextCursor = hasNextPage
+            ? posts[posts.length - 1]._id.toString()
+            : null;
+
+        const response: ApiResponse<PostsGetSuccess> = {
+            status: 'success',
+            data: {
+                message: `Posts by user ${userId} retrieved successfully`,
+                posts: posts,
+                nextCursor,
+            },
+        };
+
+        res.status(StatusCodes.OK).json(response);
+    } catch (error) {
+        next(error);
+    }
+};
+
 const getPostById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params; // Validated by middleware
@@ -318,6 +377,7 @@ export {
     createPost,
     getMyPosts,
     getFollowedUsersPosts,
+    getPostsByUserId,
     getPostById,
     deletePost,
 };
