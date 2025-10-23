@@ -21,6 +21,8 @@ const NavBar = () => {
                     My Feed
                 </NavBarButton>
 
+                <RoundButtonLink to={'new-post'} icon={<GoPlus />} />
+
                 <NavBarButton to={'my-profile'} icon={<GoPerson />}>
                     Profile
                 </NavBarButton>
@@ -29,7 +31,6 @@ const NavBar = () => {
                     Settings
                 </NavBarButton>
             </div>
-            <RoundButtonLink to={'new-post'} icon={<GoPlus />} />
         </HStack>
     );
 };

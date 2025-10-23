@@ -9,7 +9,7 @@
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
-    background-color: var(--color-navbar-background);
+    background-color: var(--color-accent-blue);
     backdrop-filter: var(--navbar-backdrop-filter);
     --webkit-backdrop-filter: var(--navbar-backdrop-filter);
     padding: 0.7rem;
@@ -23,7 +23,7 @@
     display: flex;
     /*align-items: center;*/
     /*justify-content: center;*/
-    color: var(--color-text-secondary);
+    color: white;
     transition: color 0.2s ease-in-out; /* Added for a smooth transition */
     user-select: none;
     -webkit-user-select: none;
