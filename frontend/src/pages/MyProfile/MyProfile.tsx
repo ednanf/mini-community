@@ -40,6 +40,9 @@ type PaginatedResponse = {
     nextCursor: string | null;
 };
 
+// TODO: Unify ViewProfile and MyProfile into a single component with a prop to determine which profile to show
+// TODO: If authorId = logged in user id, show edit button in postcard, else show follow button
+
 const MyProfile = () => {
     const [user, setUser] = useState<User | null>(null);
     const [posts, setPosts] = useState<Post[]>([]);
@@ -139,7 +142,7 @@ const MyProfile = () => {
                     const message =
                         error instanceof Error
                             ? error.message
-                            : 'Failed to fetch journal entries.';
+                            : 'Failed to fetch posts.';
                     setError(message);
                     toast.error(message);
                 }
@@ -185,6 +188,7 @@ const MyProfile = () => {
                             nickname={p.createdBy.nickname}
                             postBody={p.postContent}
                             date={p.createdAt}
+                            authorId={p.createdBy._id}
                         />
                     ))}
                     {hasMore && (
