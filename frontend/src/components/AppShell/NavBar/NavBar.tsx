@@ -10,6 +10,8 @@ import styles from './NavBar.module.css';
 import { HStack } from '../../Layout/HStack.tsx';
 
 const NavBar = () => {
+    const userId = localStorage.getItem('id');
+
     return (
         <HStack justify="between" className={styles.navBarHStack}>
             <div className={styles.navBar}>
@@ -23,7 +25,7 @@ const NavBar = () => {
 
                 <RoundButtonLink to={'new-post'} icon={<GoPlus />} />
 
-                <NavBarButton to={'my-profile'} icon={<GoPerson />}>
+                <NavBarButton to={`profile/${userId}`} icon={<GoPerson />}>
                     Profile
                 </NavBarButton>
 

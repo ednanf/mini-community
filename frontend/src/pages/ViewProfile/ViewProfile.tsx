@@ -45,9 +45,6 @@ type RouteParams = {
     userId: string;
 };
 
-// TODO: Unify ViewProfile and MyProfile into a single component with a prop to determine which profile to show
-// TODO: If authorId = logged in user id, show edit button in postcard, else show follow button
-
 const ViewProfile = () => {
     const { userId } = useParams<RouteParams>(); // Grab profileId from route params
 
