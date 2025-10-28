@@ -5,7 +5,7 @@ import { HStack } from '../../Layout/HStack.tsx';
 interface PillButtonProps {
     icon?: React.ReactNode;
     type: 'button' | 'submit' | 'reset';
-    handleClick: () => void;
+    handleClick?: () => void;
     disabled?: boolean;
     children?: React.ReactNode;
 }

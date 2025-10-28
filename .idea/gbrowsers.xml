@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="GBrowserService"><![CDATA[{
+  "theme": "LIGHT",
+  "history": [
+    {
+      "name": "GBrowser - IntelliJ IDEs Plugin | Marketplace",
+      "url": "https://plugins.jetbrains.com/plugin/14458-gbrowser"
+    },
+    {
+      "name": "Mini Community",
+      "url": "http://localhost:5173/"
+    },
+    {
+      "name": "Mini Community",
+      "url": "http://localhost:5173/login"
+    },
+    {
+      "name": "Mini Community",
+      "url": "http://localhost:5173/global-feed"
+    },
+    {
+      "name": "Mini Community",
+      "url": "http://localhost:5173/new-post"
+    },
+    {
+      "name": "Mini Community",
+      "url": "http://localhost:5173/my-feed"
+    }
+  ],
+  "bookmarks": [
+    {
+      "url": "http://localhost:5173/",
+      "name": "Mini Community"
+    }
+  ]
+}]]></component>
+</project>
