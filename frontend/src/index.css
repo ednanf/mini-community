@@ -58,6 +58,8 @@ h1, h2, h3, h4, h5, h6, p, div, span, a, button {
 
 }
 
+/* TODO: Add dark mode colorscheme (currently broken) */
+
 [data-theme="dark"] {
     /* General colors */
     /* Dark Theme Colors */
