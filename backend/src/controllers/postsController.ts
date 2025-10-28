@@ -183,39 +183,30 @@ const getFollowedUsersPosts = async (
             return;
         }
 
-        // Extract the following list if it exists
-        const { following } = user;
+        // 2. Create a list of authors to fetch posts from.
+        // This includes the authenticated user and the users they follow.
+        const authorsToFetch = [
+            new mongoose.Types.ObjectId(userId),
+            ...(user.following || []),
+        ];
 
-        // If the user isn't following anyone, no need to query for posts.
-        if (!following || following.length === 0) {
-            const response: ApiResponse<PostsGetSuccess> = {
-                status: 'success',
-                data: {
-                    message: 'You are not following anyone yet.',
-                    posts: [],
-                    nextCursor: null,
-                },
-            };
-            return res.status(StatusCodes.OK).json(response);
-        }
-
-        // 2. Get 'limit' and 'cursor' from query parameters
+        // 3. Get 'limit' and 'cursor' from query parameters
         const { limit: queryLimit, cursor } = req.query;
         const limit = parseInt(queryLimit as string, 10) || 20; // Default limit to 20
 
-        // 3. Database query to fetch posts from followed users
+        // 4. Database query to fetch posts from the author list
         const query: {
             createdBy: { $in: mongoose.Types.ObjectId[] };
             _id?: { $lt: mongoose.Types.ObjectId };
         } = {
-            createdBy: { $in: following },
+            createdBy: { $in: authorsToFetch },
         };
 
         if (cursor && typeof cursor === 'string') {
             query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
         }
 
-        // 4. Fetch one more item than the requested limit
+        // 5. Fetch one more item than the requested limit
         const posts: (IPost & { _id: mongoose.Types.ObjectId })[] =
             await Post.find(query)
                 .sort({ _id: -1 })
@@ -223,7 +214,7 @@ const getFollowedUsersPosts = async (
                 .lean()
                 .populate({ path: 'createdBy', select: 'nickname' });
 
-        // 5. Check for next page and determine the next cursor
+        // 6. Check for next page and determine the next cursor
         const hasNextPage = posts.length > limit;
         if (hasNextPage) {
             posts.pop();
@@ -236,7 +227,7 @@ const getFollowedUsersPosts = async (
         const response: ApiResponse<PostsGetSuccess> = {
             status: 'success',
             data: {
-                message: 'Posts from followed users retrieved successfully',
+                message: 'Your feed posts retrieved successfully',
                 posts: posts,
                 nextCursor,
             },
