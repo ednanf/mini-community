@@ -26,6 +26,14 @@
     {
       "name": "Mini Community",
       "url": "http://localhost:5173/my-feed"
+    },
+    {
+      "name": "Mini Community",
+      "url": "http://localhost:5173/profile/68f7794a289bba062bb644c5"
+    },
+    {
+      "name": "Mini Community",
+      "url": "http://localhost:5173/edit-profile"
     }
   ],
   "bookmarks": [
