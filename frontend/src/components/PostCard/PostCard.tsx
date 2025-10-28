@@ -12,6 +12,9 @@ interface PostCardProps {
     date: string;
 }
 
+// TODO: Limit width of post card on larger screens and add word wrap for long words
+// **might need to adjust all feeds to center cards properly
+
 const PostCard = ({
     image,
     nickname,
