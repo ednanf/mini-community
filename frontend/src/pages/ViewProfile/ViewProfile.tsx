@@ -137,8 +137,6 @@ const ViewProfile = () => {
                     `/users/${userId}`,
                 );
 
-                console.log('Fetched user:', responseUser);
-
                 if (!ignore) {
                     setUser(responseUser);
                     setPosts(response.posts);
