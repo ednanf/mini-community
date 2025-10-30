@@ -62,28 +62,25 @@ h1, h2, h3, h4, h5, h6, p, div, span, a, button {
 
 [data-theme="dark"] {
     /* General colors */
-    /* Dark Theme Colors */
-
-    /* General colors */
-    --color-bg-dark: #15202B;
-    --color-border-dark: #38444D;
-    --color-text-primary-dark: #E1E8ED;
-    --color-text-secondary-dark: #8899A6;
-    --color-primary-dark: #1DA1F2;
-    --color-secondary-light-gray-dark: #192734;
-    --color-secondary-medium-gray-dark: #38444D;
-    --color-secondary-dark-gray-dark: #E1E8ED;
-    --color-accent-blue-dark: #1DA1F2;
-    --color-accent-red-dark: #FF5A79;
-    --color-accent-green-dark: #2ECC71;
+    --color-bg-dark: #15202B; /* primary background – Twitter dark base */
+    --color-border-dark: #273340; /* subtle borders / outlines */
+    --color-text-primary-dark: #E7E9EA; /* main text (off-white for comfort) */
+    --color-text-secondary-dark: #8B98A5; /* muted secondary text */
+    --color-primary-dark: #1D9BF0; /* signature Twitter-blue style accent */
+    --color-secondary-light-gray-dark: #192734; /* elevated surfaces / cards */
+    --color-secondary-medium-gray-dark: #273340; /* secondary containers */
+    --color-secondary-dark-gray-dark: #F7F9F9; /* lighter text on darker surfaces */
+    --color-accent-blue-dark: #1D9BF0; /* interactive links, hover states */
+    --color-accent-red-dark: #F4212E; /* alerts / likes */
+    --color-accent-green-dark: #00BA7C; /* success / positive actions */
 
     /* NavBar */
-    --color-navbar-background-dark: rgba(21, 32, 43, 0.8);
-    --color-navbar-border-dark: rgba(29, 161, 242, 0.2);
+    --color-navbar-background-dark: rgba(21, 32, 43, 0.7); /* soft glass */
+    --color-navbar-border-dark: rgba(39, 51, 64, 0.5);
     --navbar-backdrop-filter-dark: blur(100px);
 
     /* Post and comments cards */
-    --color-card-bg-dark: #000000;
+    --color-card-bg-dark: #192734;
 
     /* Semantic mapping */
     --color-bg: var(--color-bg-dark);

@@ -1,7 +1,7 @@
 .cardBody {
     background-color: var(--color-card-bg);
     border: 1px solid var(--color-border);
-
+    color: var(--color-text-primary);
 }
 
 .avatarWrapper {
