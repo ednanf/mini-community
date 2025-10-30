@@ -7,6 +7,7 @@ import { getUnwrapped, patchUnwrapped } from '../../utils/axiosInstance.ts';
 import InputField from '../../components/Forms/InputField/InputField.tsx';
 import PillButton from '../../components/Buttons/PillButton/PillButton.tsx';
 import TextArea from '../../components/Forms/TextArea/TextArea.tsx';
+import Loader from '../../components/Loader/Loader.tsx';
 
 type FormData = {
     nickname?: string;
@@ -27,18 +28,13 @@ type ApiError = {
 };
 
 const EditProfile = () => {
-    const [formData, setFormData] = useState<FormData>({
-        email: '',
-        nickname: '',
-        bio: '',
-    });
-
+    const [formData, setFormData] = useState<FormData | null>(null);
     const [errors, setErrors] = useState<Partial<FormData>>({
         nickname: '',
         email: '',
         bio: '',
     });
-
+    const [initialLoading, setInitialLoading] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
 
     const navigate = useNavigate();
@@ -56,6 +52,8 @@ const EditProfile = () => {
                 });
             } catch (error) {
                 console.error('Failed to fetch user data:', error);
+            } finally {
+                setInitialLoading(false);
             }
         };
 
@@ -63,11 +61,7 @@ const EditProfile = () => {
     }, []);
 
     const validate = (data: FormData) => {
-        const newErrors: FormData = {
-            nickname: '',
-            email: '',
-            bio: '',
-        };
+        const newErrors: Partial<FormData> = {};
         if (data.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
             newErrors.email = 'Invalid email format';
         }
@@ -76,28 +70,27 @@ const EditProfile = () => {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
+        setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
     const handleTextAreaChange = (
         event: React.ChangeEvent<HTMLTextAreaElement>,
     ) => {
         const inputText = event.target.value;
-        setFormData({ ...formData, bio: inputText });
+        setFormData((prev) => ({ ...prev, bio: inputText }));
     };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
 
-        setErrors({
-            nickname: '',
-            email: '',
-            bio: '',
-        });
+        if (!formData) return;
+
+        setErrors({});
 
         const validationErrors = validate(formData);
-        if (validationErrors.email) {
+        if (Object.keys(validationErrors).length > 0) {
             setErrors(validationErrors);
+            return;
         }
 
         setIsLoading(true);
@@ -115,15 +108,24 @@ const EditProfile = () => {
 
             navigate(`/profile/${currentUserId}`);
         } catch (error) {
-            // Handle error
             const apiError = error as ApiError;
-            toast.error(
-                apiError.message || 'Registration failed. Please try again.',
-            );
+            toast.error(apiError.message || 'Update failed. Please try again.');
         } finally {
             setIsLoading(false);
         }
     };
+
+    if (initialLoading) {
+        return (
+            <VStack
+                justify={'center'}
+                align={'center'}
+                style={{ minHeight: '80vh' }}
+            >
+                <Loader />
+            </VStack>
+        );
+    }
 
     return (
         <form
@@ -145,33 +147,30 @@ const EditProfile = () => {
                     id={'nickname'}
                     name={'nickname'}
                     placeholder={currentUserNickname || ''}
-                    value={formData.nickname ? formData.nickname : ''}
+                    value={formData?.nickname || ''}
                     onChange={handleInputChange}
                     error={errors.nickname}
                 />
-
                 <InputField
                     type={'email'}
                     label={'New email'}
                     id={'email'}
                     name={'email'}
                     placeholder={currentUserEmail || ''}
-                    value={formData.email ? formData.email : ''}
+                    value={formData?.email || ''}
                     onChange={handleInputChange}
                     error={errors.email}
                     required={false}
                 />
-
                 <TextArea
                     label={'Bio'}
                     maxLength={140}
-                    value={formData.bio ? formData.bio : ''}
+                    value={formData?.bio || ''}
                     placeholder={'Tell us about yourself...'}
                     onChange={handleTextAreaChange}
-                    characterCount={formData.bio ? formData.bio.length : 0}
+                    characterCount={formData?.bio?.length || 0}
                     rows={5}
                 />
-
                 <HStack justify={'center'}>
                     <PillButton type={'submit'} disabled={isLoading}>
                         {isLoading ? 'Updating...' : 'Update'}
