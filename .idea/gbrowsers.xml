@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="GBrowserService"><![CDATA[{
+  "defaultHomePage": "about:blank",
   "theme": "LIGHT",
   "history": [
     {
@@ -34,6 +35,10 @@
     {
       "name": "Mini Community",
       "url": "http://localhost:5173/edit-profile"
+    },
+    {
+      "name": "about:blank",
+      "url": "about:blank"
     }
   ],
   "bookmarks": [

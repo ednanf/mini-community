@@ -1,10 +1,22 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { VStack } from '../../components/Layout/VStack.tsx';
 import PillButtonLink from '../../components/Buttons/PillButtonLink/PillButtonLink.tsx';
 import logo from '../../assets/logo-no-bg.png';
 import styles from './LandingPage.module.css';
 
 const LandingPage = () => {
+    const navigate = useNavigate();
+
+    const isAuthenticated = !!localStorage.getItem('token');
+
+    useEffect(() => {
+        if (isAuthenticated) {
+            navigate('/my-feed');
+        }
+    }, [isAuthenticated, navigate]);
+
     return (
         <VStack
             justify={'center'}
