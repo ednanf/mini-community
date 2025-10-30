@@ -6,6 +6,7 @@ import { HStack } from '../../components/Layout/HStack.tsx';
 import { postUnwrapped } from '../../utils/axiosInstance.ts';
 import PillButton from '../../components/Buttons/PillButton/PillButton.tsx';
 import styles from './NewPost.module.css';
+import TextArea from '../../components/Forms/TextArea/TextArea.tsx';
 
 type ApiError = {
     message: string;
@@ -53,15 +54,14 @@ const NewPost = () => {
     return (
         <VStack align={'center'} margin={'md'}>
             <form onSubmit={handleSubmit} className={styles.form}>
-                <textarea
+                <TextArea
                     maxLength={140}
-                    className={styles.textInput}
                     value={text}
                     placeholder={"What's on your mind?"}
                     onChange={handleChange}
+                    characterCount={textCount}
                     rows={5}
                 />
-                <div className={styles.textCounter}>{textCount}/140</div>
 
                 <HStack align={'center'} justify={'center'}>
                     {' '}
