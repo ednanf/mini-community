@@ -168,7 +168,7 @@ const ViewProfile = () => {
     }, [userId]);
 
     return (
-        <VStack>
+        <VStack align={'center'} gap={'sm'} margin={'md'}>
             {posts.length === 0 && initialLoading ? (
                 <VStack
                     justify={'center'}
@@ -187,6 +187,7 @@ const ViewProfile = () => {
                             avatarUrl={userPlaceholder}
                         />
                     )}
+
                     {posts.map((p) => (
                         <PostCard
                             key={p._id}
@@ -197,6 +198,7 @@ const ViewProfile = () => {
                             authorId={p.createdBy._id}
                         />
                     ))}
+
                     {hasMore && (
                         <div ref={loaderRef}>
                             <VStack

@@ -32,7 +32,7 @@ const PostCard = ({
                     alt={'profile picture'}
                     className={styles.profileImage}
                 />
-                <VStack>
+                <VStack style={{ minWidth: '0' }}>
                     <div className={styles.nickname}>
                         <Link
                             to={`../profile/${authorId}`}
@@ -41,7 +41,7 @@ const PostCard = ({
                             @{nickname}
                         </Link>
                     </div>
-                    <p>{postBody}</p>
+                    <p className={styles.postBody}>{postBody}</p>
                     <HStack>
                         <p className={styles.timestamp}>{formattedDate}</p>
                     </HStack>

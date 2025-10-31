@@ -143,7 +143,7 @@ const MyFeed = () => {
     }, []);
 
     return (
-        <VStack>
+        <VStack align={'center'} gap={'sm'} margin={'md'}>
             {posts.length === 0 && initialLoading ? (
                 <VStack
                     justify={'center'}
