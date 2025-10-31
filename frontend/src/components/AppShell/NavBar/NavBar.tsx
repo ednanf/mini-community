@@ -1,6 +1,4 @@
 import NavBarButton from './NavBarButton.tsx';
-import RoundButtonLink from '../../Buttons/RoundButtonLink/RoundButtonLink.tsx';
-
 import { CiGlobe } from 'react-icons/ci';
 import { CgFeed } from 'react-icons/cg';
 import { GoPerson } from 'react-icons/go';
@@ -23,7 +21,9 @@ const NavBar = () => {
                     My Feed
                 </NavBarButton>
 
-                <RoundButtonLink to={'new-post'} icon={<GoPlus />} />
+                <NavBarButton to={'new-post'} icon={<GoPlus />}>
+                    New Post
+                </NavBarButton>
 
                 <NavBarButton to={`profile/${userId}`} icon={<GoPerson />}>
                     Profile
