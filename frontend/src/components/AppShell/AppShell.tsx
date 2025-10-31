@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { ToastContainer } from 'react-toastify';
 import useTheme from '../../hooks/useTheme.ts';
 import Header from './Header/Header.tsx';
@@ -8,12 +8,23 @@ import styles from './AppShell.module.css';
 
 const AppShell = () => {
     const { theme, toggleTheme } = useTheme();
-    // TODO: use token to determine which UI is shown
+
     const [token, setToken] = useState(localStorage.getItem('token'));
 
     const location = useLocation();
 
+    const navigate = useNavigate();
+
     const toastTheme = theme === 'dark' ? 'dark' : 'light';
+
+    // Prevent access to protected routes if not authenticated
+    const isAuthenticated = !!localStorage.getItem('token');
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            navigate('/');
+        }
+    }, [isAuthenticated, navigate]);
 
     // Paths where the header and navbar should be hidden
     const hiddenLayoutPaths = ['/', '/login', '/register'];
@@ -46,9 +57,6 @@ const AppShell = () => {
             window.removeEventListener('local-storage', handleStorageChange);
         };
     }, []);
-
-    // TODO: change the conditional layout to check also if the user is authenticated or not
-    // This will allow to see a public profile page without the header and navbar when not logged in
 
     return (
         <div className={styles.layout}>
