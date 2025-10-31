@@ -1,6 +1,5 @@
 .button {
     text-decoration: none;
-    color: #FFFFFF; /* Fixed color regardless of dark mode */
     padding: 0.5rem 1rem;
     border-radius: 9999px; /* Pill shape */
     font-weight: 600;
@@ -24,17 +23,17 @@
     margin-top: 1px;
 }
 
-.default {
+.button.default {
     background-color: var(--color-accent-blue);
-
+    color: #FFFFFF;
 }
 
-.red {
+.button.red {
     background-color: var(--color-accent-red);
-
+    color: #FFFFFF;
 }
 
-.green {
+.button.green {
     background-color: var(--color-accent-green);
-    
+    color: #FFFFFF;
 }
