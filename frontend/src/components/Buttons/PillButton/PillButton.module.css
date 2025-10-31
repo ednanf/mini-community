@@ -1,6 +1,5 @@
 .button {
     text-decoration: none;
-    background-color: var(--color-accent-blue);
     color: #FFFFFF; /* Fixed color regardless of dark mode */
     padding: 0.5rem 1rem;
     border-radius: 9999px; /* Pill shape */
@@ -23,4 +22,19 @@
 .icon {
     vertical-align: middle;
     margin-top: 1px;
+}
+
+.default {
+    background-color: var(--color-accent-blue);
+
+}
+
+.red {
+    background-color: var(--color-accent-red);
+
+}
+
+.green {
+    background-color: var(--color-accent-green);
+    
 }

@@ -6,6 +6,7 @@ interface PillButtonProps {
     icon?: React.ReactNode;
     type: 'button' | 'submit' | 'reset';
     handleClick?: () => void;
+    color?: 'default' | 'red' | 'green';
     disabled?: boolean;
     children?: React.ReactNode;
 }
@@ -14,6 +15,7 @@ const PillButton = ({
     icon,
     type,
     handleClick,
+    color = 'default',
     disabled,
     children,
 }: PillButtonProps) => {
@@ -21,7 +23,7 @@ const PillButton = ({
         <button
             type={type}
             onClick={handleClick}
-            className={styles.button}
+            className={`${styles.button} ${styles[`${color}`]}`}
             disabled={disabled}
         >
             <HStack align={'center'} justify={'center'} gap={'sm'}>
