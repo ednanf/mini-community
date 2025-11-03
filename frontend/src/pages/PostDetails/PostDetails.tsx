@@ -185,11 +185,25 @@ const PostDetails = () => {
                 payload,
             );
 
+            // The API returns createdBy as just a string ID, but we need the full object
+            // Reconstruct the comment with the current user's info from localStorage
+            const currentUserId = localStorage.getItem('id');
+            const currentUserNickname = localStorage.getItem('nickname');
+
+            const newComment: Comment = {
+                _id: response.commentContent._id,
+                createdBy: {
+                    _id:
+                        currentUserId ||
+                        String(response.commentContent.createdBy),
+                    nickname: currentUserNickname || 'Unknown',
+                },
+                commentContent: response.commentContent.commentContent,
+                createdAt: response.commentContent.createdAt,
+            };
+
             // Add the new comment to the beginning of the comments list
-            setComments((prevComments) => [
-                response.commentContent,
-                ...prevComments,
-            ]);
+            setComments((prevComments) => [newComment, ...prevComments]);
 
             toast.success('Comment posted successfully!');
 
@@ -257,6 +271,9 @@ const PostDetails = () => {
                             </PillButton>
                         </HStack>
                     </form>
+
+                    {/* Separator */}
+                    <div className={styles.separator}></div>
 
                     {comments.map((comment) => (
                         <PostCard
