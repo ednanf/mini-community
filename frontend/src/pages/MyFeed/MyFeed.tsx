@@ -163,6 +163,7 @@ const MyFeed = () => {
                             postBody={p.postContent}
                             date={p.createdAt}
                             authorId={p.createdBy._id}
+                            postId={p._id}
                         />
                     ))}
                     {hasMore && (

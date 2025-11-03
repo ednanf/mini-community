@@ -163,6 +163,7 @@ const GlobalFeed = () => {
                             authorId={p.createdBy._id}
                             postBody={p.postContent}
                             date={p.createdAt}
+                            postId={p._id}
                         />
                     ))}
                     {hasMore && (

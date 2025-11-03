@@ -12,6 +12,8 @@ interface PostCardProps {
     postBody: string;
     date: string;
     postId: string;
+    isParentPost?: boolean;
+    isComment?: boolean;
 }
 
 const PostCard = ({
@@ -21,8 +23,13 @@ const PostCard = ({
     postBody,
     date,
     postId,
+    isParentPost = false,
+    isComment = false,
 }: PostCardProps) => {
     const formattedDate = mongodbDateFormatter(date);
+
+    // Hide reply button if it's a parent post or a comment in PostDetails
+    const showReplyButton = !isParentPost && !isComment;
 
     return (
         <div className={styles.cardBody}>
@@ -44,12 +51,14 @@ const PostCard = ({
                     <p className={styles.postBody}>{postBody}</p>
                     <HStack align={'center'} justify={'between'}>
                         <p className={styles.timestamp}>{formattedDate}</p>
-                        <Link
-                            to={`/posts/${postId}`}
-                            className={styles.commentButton}
-                        >
-                            <TbMessageReply />
-                        </Link>
+                        {showReplyButton && (
+                            <Link
+                                to={`/posts/${postId}`}
+                                className={styles.commentButton}
+                            >
+                                <TbMessageReply />
+                            </Link>
+                        )}
                     </HStack>
                 </VStack>
             </HStack>

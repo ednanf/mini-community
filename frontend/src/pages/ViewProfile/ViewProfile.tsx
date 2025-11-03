@@ -196,6 +196,7 @@ const ViewProfile = () => {
                             postBody={p.postContent}
                             date={p.createdAt}
                             authorId={p.createdBy._id}
+                            postId={p._id}
                         />
                     ))}
 

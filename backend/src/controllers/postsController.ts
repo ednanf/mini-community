@@ -302,11 +302,16 @@ const getPostById = async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id } = req.params; // Validated by middleware
 
-        const post = await Post.findOne({ _id: id }).populate({
-            path: 'postComments',
-            select: 'commentContent createdBy',
-            populate: { path: 'createdBy', select: 'nickname' },
-        });
+        const post = await Post.findOne({ _id: id })
+            .populate({
+                path: 'createdBy',
+                select: 'nickname',
+            })
+            .populate({
+                path: 'postComments',
+                select: 'commentContent createdBy',
+                populate: { path: 'createdBy', select: 'nickname' },
+            });
 
         if (!post) {
             next(new NotFoundError('Post not found.'));
