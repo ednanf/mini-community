@@ -166,7 +166,7 @@ const EditProfile = () => {
                     label={'Bio'}
                     maxLength={140}
                     value={formData?.bio || ''}
-                    placeholder={'Tell us about yourself...'}
+                    placeholder={'Tell everyone about yourself...'}
                     onChange={handleTextAreaChange}
                     characterCount={formData?.bio?.length || 0}
                     rows={5}
