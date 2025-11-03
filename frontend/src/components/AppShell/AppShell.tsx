@@ -62,7 +62,9 @@ const AppShell = () => {
         <div className={styles.layout}>
             {showLayout && (
                 <header>
-                    <Header>{locationName}</Header>
+                    <Header>
+                        {locationName === 'Posts' ? 'Details' : locationName}
+                    </Header>
                 </header>
             )}
             <main className={styles.main}>

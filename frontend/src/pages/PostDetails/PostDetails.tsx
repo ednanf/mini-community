@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { getUnwrapped, postUnwrapped } from '../../utils/axiosInstance.ts';
@@ -185,7 +185,6 @@ const PostDetails = () => {
                 payload,
             );
 
-            // The API returns createdBy as just a string ID, but we need the full object
             // Reconstruct the comment with the current user's info from localStorage
             const currentUserId = localStorage.getItem('id');
             const currentUserNickname = localStorage.getItem('nickname');
