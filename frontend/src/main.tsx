@@ -30,7 +30,7 @@ const router = createBrowserRouter([
             { path: 'my-feed', element: <MyFeed /> },
             { path: 'edit-profile', element: <EditProfile /> },
             { path: 'profile/:userId', element: <ViewProfile /> },
-            { path: 'post/:postId', element: <PostDetails /> },
+            { path: 'posts/:postId', element: <PostDetails /> },
             { path: 'new-post', element: <NewPost /> },
             { path: 'settings', element: <Settings /> },
             { path: '*', element: <NotFound /> },
