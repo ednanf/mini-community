@@ -36,3 +36,17 @@
     color: var(--color-text-secondary);
     font-size: 0.8rem
 }
+
+.commentButton {
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    color: var(--color-text-secondary);
+    font-size: 1.4rem;
+    text-decoration: none;
+}
+
+.commentButton:hover {
+    color: var(--color-accent-blue);
+}
