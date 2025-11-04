@@ -233,6 +233,7 @@ const PostDetails = () => {
                 </VStack>
             ) : post ? (
                 <>
+                    {/* Parent Post */}
                     <PostCard
                         image={userPlaceholder}
                         nickname={post.createdBy.nickname}
@@ -272,9 +273,9 @@ const PostDetails = () => {
                         </HStack>
                     </form>
 
-                    {/* Separator */}
                     <Separator />
 
+                    {/* Comment Cards */}
                     {comments.map((comment) => (
                         <PostCard
                             key={comment._id}
@@ -288,12 +289,16 @@ const PostDetails = () => {
                         />
                     ))}
 
+                    {/* Loading animation for pagination */}
                     {hasMore && (
                         <div ref={loaderRef}>
                             <VStack
                                 justify={'center'}
                                 align={'center'}
-                                style={{ marginBottom: '4rem' }}
+                                style={{
+                                    marginBottom: '4rem',
+                                    marginTop: '1rem',
+                                }}
                             >
                                 <Loader />
                             </VStack>
