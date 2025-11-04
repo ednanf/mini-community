@@ -4,7 +4,6 @@
     border-radius: 30px;
     color: var(--color-text-primary);
     box-shadow: var(--color-accent-blue) 0 0 15px -5px;
-    margin-bottom: 1.5rem;
     max-width: 600px;
     width: 100%;
 }

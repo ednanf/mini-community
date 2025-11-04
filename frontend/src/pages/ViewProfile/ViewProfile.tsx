@@ -10,6 +10,7 @@ import PostCard from '../../components/PostCard/PostCard.tsx';
 import Loader from '../../components/Loader/Loader.tsx';
 
 import userPlaceholder from '../../assets/user-placeholder.png';
+import Separator from '../../components/Separator/Separator.tsx';
 
 type Post = {
     _id: string;
@@ -187,6 +188,8 @@ const ViewProfile = () => {
                             avatarUrl={userPlaceholder}
                         />
                     )}
+
+                    <Separator />
 
                     {posts.map((p) => (
                         <PostCard

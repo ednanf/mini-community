@@ -10,6 +10,7 @@ import TextArea from '../../components/Forms/TextArea/TextArea.tsx';
 import PillButton from '../../components/Buttons/PillButton/PillButton.tsx';
 import userPlaceholder from '../../assets/user-placeholder.png';
 import styles from './PostDetails.module.css';
+import Separator from '../../components/Separator/Separator.tsx';
 
 type Post = {
     _id: string;
@@ -272,7 +273,7 @@ const PostDetails = () => {
                     </form>
 
                     {/* Separator */}
-                    <div className={styles.separator}></div>
+                    <Separator />
 
                     {comments.map((comment) => (
                         <PostCard
