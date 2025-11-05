@@ -20,9 +20,9 @@
     transform: translateX(-50%);
     z-index: 10; /* Ensures it's above the content */
     display: flex;
-    gap: 1rem;
+    gap: 1.5rem;
     align-items: stretch;
-    width: 80%;
+    width: 90%;
     max-width: 1000px;
     min-width: 300px;
 }

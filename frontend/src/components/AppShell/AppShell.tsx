@@ -61,7 +61,7 @@ const AppShell = () => {
     return (
         <div className={styles.layout}>
             {showLayout && (
-                <header>
+                <header className={styles.headerWrapper}>
                     <Header>
                         {locationName === 'Posts' ? 'Details' : locationName}
                     </Header>
