@@ -1,0 +1,1705 @@
+openapi: 3.0.3
+
+info:
+  title: Mini Community API
+  description: |
+    A social community platform API built with Node.js, Express, and MongoDB.
+    
+    ## Authentication
+    Most endpoints require JWT authentication. After registering or logging in, you'll receive a JWT token.
+    Include this token in the `Authorization` header as a Bearer token for protected endpoints.
+    
+    ## Pagination
+    List endpoints support cursor-based pagination using the `cursor` and `limit` query parameters.
+    The response includes a `nextCursor` field - pass this value as the `cursor` parameter to fetch the next page.
+    
+    ## Rate Limiting
+    The API implements rate limiting to prevent abuse. If you exceed the rate limit, you'll receive a 429 status code.
+    
+    ## Notes
+    - The backend may take a moment to wake up after periods of inactivity (hosted on Render)
+    - Auth tokens are designed for localStorage rather than cookies to avoid CORS complications
+    
+  version: 1.0.0
+  contact:
+    name: Ednan Rogério Frizzera Filho
+    url: https://github.com/ednanf
+  license:
+    name: All Rights Reserved
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development server
+  - url: https://api.example.com/api/v1
+    description: Production server (update with actual URL)
+
+tags:
+  - name: Authentication
+    description: User authentication and account management endpoints
+  - name: Users
+    description: User profile and relationship management
+  - name: Posts
+    description: Post creation, retrieval, and management
+  - name: Comments
+    description: Comment operations on posts
+
+paths:
+  # ============================================================================
+  # AUTHENTICATION ENDPOINTS
+  # ============================================================================
+  
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: |
+        Creates a new user account with the provided credentials.
+        Returns a JWT token for immediate authentication.
+        
+        **Validations:**
+        - Nickname: 3-10 characters, unique
+        - Email: Valid email format, unique
+        - Password: Minimum 6 characters
+        - Avatar URL: Maximum 2048 characters, valid URL format (optional)
+        - Bio: Maximum 280 characters (optional)
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - nickname
+                - email
+                - password
+              properties:
+                nickname:
+                  type: string
+                  minLength: 3
+                  maxLength: 10
+                  description: Unique username for the account (lowercase)
+                  example: johndoe
+                email:
+                  type: string
+                  format: email
+                  minLength: 5
+                  description: User's email address (lowercase)
+                  example: john.doe@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  description: Account password (will be hashed)
+                  example: securePassword123
+                avatarUrl:
+                  type: string
+                  format: uri
+                  maxLength: 2048
+                  description: URL to user's avatar image
+                  example: https://example.com/avatars/johndoe.jpg
+                bio:
+                  type: string
+                  maxLength: 280
+                  description: Short biography or description
+                  example: Software developer passionate about open source
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: User registered successfully.
+                      id:
+                        type: string
+                        description: MongoDB ObjectId of the created user
+                        example: 507f1f77bcf86cd799439011
+                      nickname:
+                        type: string
+                        example: johndoe
+                      email:
+                        type: string
+                        format: email
+                        example: john.doe@example.com
+                      token:
+                        type: string
+                        description: JWT authentication token
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          description: Email or nickname already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MongoDatabaseError'
+              example:
+                status: error
+                data:
+                  code: 11000
+                  message: Email already exists.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in to an existing account
+      description: |
+        Authenticates a user with email and password.
+        Returns a JWT token for subsequent authenticated requests.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  description: User's registered email address
+                  example: john.doe@example.com
+                password:
+                  type: string
+                  format: password
+                  description: User's account password
+                  example: securePassword123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Log in successful. Welcome back!
+                      id:
+                        type: string
+                        description: User's MongoDB ObjectId
+                        example: 507f1f77bcf86cd799439011
+                      nickname:
+                        type: string
+                        example: johndoe
+                      email:
+                        type: string
+                        format: email
+                        example: john.doe@example.com
+                      token:
+                        type: string
+                        description: JWT authentication token
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                status: error
+                data:
+                  message: There is an issue with your email or password.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Log out from the application
+      description: |
+        Logs out the current user. Note that since JWT tokens are stateless,
+        the client should discard the token to complete the logout process.
+      operationId: logoutUser
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Good bye!
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get current authenticated user's profile
+      description: |
+        Retrieves the profile information for the currently authenticated user.
+        Requires a valid JWT token.
+      operationId: getCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: User retrieved successfuly
+                      id:
+                        type: string
+                        description: User's MongoDB ObjectId
+                        example: 507f1f77bcf86cd799439011
+                      nickname:
+                        type: string
+                        example: johndoe
+                      bio:
+                        type: string
+                        nullable: true
+                        example: Software developer passionate about open source
+                      avatarUrl:
+                        type: string
+                        format: uri
+                        nullable: true
+                        example: https://example.com/avatars/johndoe.jpg
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================================================
+  # USER ENDPOINTS
+  # ============================================================================
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get user profile by ID
+      description: |
+        Retrieves public profile information for a specific user.
+        If the request is authenticated, it includes whether the current user is following this user.
+      operationId: getUserById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: MongoDB ObjectId of the user
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: User fetched successfully.
+                      id:
+                        type: string
+                        example: 507f1f77bcf86cd799439011
+                      nickname:
+                        type: string
+                        example: johndoe
+                      email:
+                        type: string
+                        format: email
+                        example: john.doe@example.com
+                      bio:
+                        type: string
+                        nullable: true
+                        example: Software developer passionate about open source
+                      avatarUrl:
+                        type: string
+                        format: uri
+                        nullable: true
+                        example: https://example.com/avatars/johndoe.jpg
+                      followersCount:
+                        type: integer
+                        description: Number of users following this user
+                        example: 42
+                      followingCount:
+                        type: integer
+                        description: Number of users this user is following
+                        example: 17
+                      isFollowing:
+                        type: boolean
+                        description: Whether the authenticated user follows this user (false if not authenticated)
+                        example: true
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/me:
+    patch:
+      tags:
+        - Users
+      summary: Update current user's profile
+      description: |
+        Updates the authenticated user's profile information.
+        All fields are optional - only provided fields will be updated.
+        
+        **Validations:**
+        - Nickname: 3-10 characters if provided
+        - Email: Valid email format if provided
+        - Password: Minimum 6 characters if provided (will be hashed)
+        - Avatar URL: Maximum 2048 characters, valid URL format if provided
+        - Bio: Maximum 280 characters if provided
+      operationId: updateCurrentUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nickname:
+                  type: string
+                  minLength: 3
+                  maxLength: 10
+                  example: johndoe_updated
+                email:
+                  type: string
+                  format: email
+                  example: john.updated@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 6
+                  example: newSecurePassword456
+                avatarUrl:
+                  type: string
+                  format: uri
+                  maxLength: 2048
+                  example: https://example.com/avatars/johndoe-new.jpg
+                bio:
+                  type: string
+                  maxLength: 280
+                  example: Updated bio with new information
+      responses:
+        '200':
+          description: User profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: User updated successfully.
+                      nickname:
+                        type: string
+                        example: johndoe_updated
+                      email:
+                        type: string
+                        format: email
+                        example: john.updated@example.com
+                      bio:
+                        type: string
+                        nullable: true
+                        example: Updated bio with new information
+                      avatarUrl:
+                        type: string
+                        format: uri
+                        nullable: true
+                        example: https://example.com/avatars/johndoe-new.jpg
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Users
+      summary: Delete current user's account
+      description: |
+        Permanently deletes the authenticated user's account and all associated data.
+        This includes:
+        - User profile
+        - All posts created by the user
+        - All comments created by the user
+        - Removal from all followers/following lists
+        
+        **This action cannot be undone.**
+      operationId: deleteCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User account deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: User deleted successfully.
+                      email:
+                        type: string
+                        format: email
+                        example: john.doe@example.com
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{id}/followers:
+    get:
+      tags:
+        - Users
+      summary: Get a user's followers
+      description: |
+        Retrieves the list of users who are following the specified user.
+        Requires authentication.
+      operationId: getUserFollowers
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: MongoDB ObjectId of the user
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Followers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: User's followers fetched successfully.
+                      followers:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/UserPublic'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{id}/following:
+    get:
+      tags:
+        - Users
+      summary: Get users that a user is following
+      description: |
+        Retrieves the list of users that the specified user is following.
+        Requires authentication.
+      operationId: getUserFollowing
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: MongoDB ObjectId of the user
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Following list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: User's following list fetched successfully.
+                      followers:
+                        type: array
+                        description: Array of users being followed (note - property name is 'followers' but contains following list)
+                        items:
+                          $ref: '#/components/schemas/UserPublic'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/follow/{id}:
+    post:
+      tags:
+        - Users
+      summary: Follow a user
+      description: |
+        Makes the authenticated user follow the specified user.
+        Cannot follow yourself.
+        Uses `$addToSet` to prevent duplicate follows.
+      operationId: followUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: MongoDB ObjectId of the user to follow
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: User followed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: User followed successfully.
+                      followedUser:
+                        type: string
+                        description: MongoDB ObjectId of the followed user
+                        example: 507f1f77bcf86cd799439011
+        '400':
+          description: Bad request (e.g., trying to follow yourself)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                status: error
+                data:
+                  message: You cannot follow yourself.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/unfollow/{id}:
+    post:
+      tags:
+        - Users
+      summary: Unfollow a user
+      description: |
+        Makes the authenticated user unfollow the specified user.
+        Cannot unfollow yourself.
+      operationId: unfollowUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: MongoDB ObjectId of the user to unfollow
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: User unfollowed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: User unfollowed successfully.
+                      unfollowedUser:
+                        type: string
+                        description: MongoDB ObjectId of the unfollowed user
+                        example: 507f1f77bcf86cd799439011
+        '400':
+          description: Bad request (e.g., trying to unfollow yourself)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                status: error
+                data:
+                  message: You cannot unfollow yourself.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{id}/is-following:
+    get:
+      tags:
+        - Users
+      summary: Check if authenticated user follows a specific user
+      description: |
+        Checks whether the authenticated user is following the specified user.
+        Returns a boolean value.
+      operationId: isFollowingUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: MongoDB ObjectId of the user to check
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Follow status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Successfully checked if user is following another user.
+                      isFollowing:
+                        type: boolean
+                        description: True if authenticated user follows the specified user
+                        example: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================================================
+  # POST ENDPOINTS
+  # ============================================================================
+
+  /posts:
+    get:
+      tags:
+        - Posts
+      summary: Get global feed of posts
+      description: |
+        Retrieves a paginated list of all posts from all users, sorted by creation date (newest first).
+        This is the public feed that doesn't require authentication.
+        
+        **Pagination:**
+        - Uses cursor-based pagination
+        - Default limit: 20 posts
+        - Maximum limit: 100 posts (configurable)
+        - Returns `nextCursor` for fetching the next page
+      operationId: getPosts
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of posts to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: cursor
+          in: query
+          description: Cursor for pagination (MongoDB ObjectId from previous response's nextCursor)
+          required: false
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Posts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Posts retrieved successfully
+                      posts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Post'
+                      nextCursor:
+                        type: string
+                        nullable: true
+                        description: Cursor for the next page (null if no more posts)
+                        example: 507f1f77bcf86cd799439012
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Posts
+      summary: Create a new post
+      description: |
+        Creates a new post for the authenticated user.
+        
+        **Validations:**
+        - Post content: 1-140 characters
+        - Content is sanitized against XSS attacks
+      operationId: createPost
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - postContent
+              properties:
+                postContent:
+                  type: string
+                  minLength: 1
+                  maxLength: 140
+                  description: The content of the post
+                  example: Just built an amazing API with Node.js and Express!
+      responses:
+        '201':
+          description: Post created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Post created successfully
+                      postContent:
+                        $ref: '#/components/schemas/Post'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/my-posts:
+    get:
+      tags:
+        - Posts
+      summary: Get authenticated user's own posts
+      description: |
+        Retrieves a paginated list of posts created by the authenticated user.
+        Uses cursor-based pagination similar to the global feed.
+      operationId: getMyPosts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of posts to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: cursor
+          in: query
+          description: Cursor for pagination
+          required: false
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: User's posts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Your own posts retrieved successfully
+                      posts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Post'
+                      nextCursor:
+                        type: string
+                        nullable: true
+                        description: Cursor for the next page
+                        example: 507f1f77bcf86cd799439012
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/feed:
+    get:
+      tags:
+        - Posts
+      summary: Get personalized feed of followed users' posts
+      description: |
+        Retrieves a paginated feed of posts from users that the authenticated user follows,
+        plus the authenticated user's own posts.
+        This is the personalized feed for logged-in users.
+      operationId: getFollowedUsersPosts
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: limit
+          in: query
+          description: Maximum number of posts to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: cursor
+          in: query
+          description: Cursor for pagination
+          required: false
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Personalized feed retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Your feed posts retrieved successfully
+                      posts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Post'
+                      nextCursor:
+                        type: string
+                        nullable: true
+                        description: Cursor for the next page
+                        example: 507f1f77bcf86cd799439012
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/user/{id}:
+    get:
+      tags:
+        - Posts
+      summary: Get all posts by a specific user
+      description: |
+        Retrieves a paginated list of all posts created by a specific user.
+        Does not require authentication.
+      operationId: getPostsByUserId
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: MongoDB ObjectId of the user
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+        - name: limit
+          in: query
+          description: Maximum number of posts to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: cursor
+          in: query
+          description: Cursor for pagination
+          required: false
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: User's posts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Posts by user 507f1f77bcf86cd799439011 retrieved successfully
+                      posts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Post'
+                      nextCursor:
+                        type: string
+                        nullable: true
+                        description: Cursor for the next page
+                        example: 507f1f77bcf86cd799439012
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/{id}:
+    get:
+      tags:
+        - Posts
+      summary: Get a specific post by ID
+      description: |
+        Retrieves detailed information about a specific post, including populated comments.
+        Does not require authentication.
+      operationId: getPostById
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: MongoDB ObjectId of the post
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Post retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Post retrieved successfully
+                      postContent:
+                        $ref: '#/components/schemas/PostWithComments'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - Posts
+      summary: Delete a post
+      description: |
+        Deletes a specific post. Only the author of the post can delete it.
+        Requires authentication.
+      operationId: deletePost
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: MongoDB ObjectId of the post to delete
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Post deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Post deleted successfully
+                      deletedPostId:
+                        type: string
+                        description: MongoDB ObjectId of the deleted post
+                        example: 507f1f77bcf86cd799439011
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Post not found or user not authorized to delete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                status: error
+                data:
+                  message: Post not found or you do not have permission to delete it.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ============================================================================
+  # COMMENT ENDPOINTS
+  # ============================================================================
+
+  /posts/{postId}/comments:
+    get:
+      tags:
+        - Comments
+      summary: Get comments for a specific post
+      description: |
+        Retrieves a paginated list of comments for a specific post.
+        Does not require authentication.
+        Uses cursor-based pagination.
+      operationId: getComments
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: MongoDB ObjectId of the parent post
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+        - name: limit
+          in: query
+          description: Maximum number of comments to return
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 20
+        - name: cursor
+          in: query
+          description: Cursor for pagination
+          required: false
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      responses:
+        '200':
+          description: Comments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Comments retrieved successfully
+                      comments:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Comment'
+                      nextCursor:
+                        type: string
+                        nullable: true
+                        description: Cursor for the next page
+                        example: 507f1f77bcf86cd799439012
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - Comments
+      summary: Create a comment on a post
+      description: |
+        Creates a new comment on a specific post.
+        Requires authentication.
+        
+        **Validations:**
+        - Comment content: 1-140 characters
+        - Content is sanitized against XSS attacks
+      operationId: createComment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: MongoDB ObjectId of the parent post
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - commentContent
+              properties:
+                commentContent:
+                  type: string
+                  minLength: 1
+                  maxLength: 140
+                  description: The content of the comment
+                  example: Great post! Thanks for sharing.
+      responses:
+        '201':
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Comment created successfully
+                      commentContent:
+                        $ref: '#/components/schemas/Comment'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/{postId}/comments/{id}:
+    delete:
+      tags:
+        - Comments
+      summary: Delete a comment
+      description: |
+        Deletes a specific comment. Only the author of the comment can delete it.
+        Requires authentication.
+      operationId: deleteComment
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          description: MongoDB ObjectId of the parent post
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439011
+        - name: id
+          in: path
+          required: true
+          description: MongoDB ObjectId of the comment to delete
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{24}$'
+            example: 507f1f77bcf86cd799439012
+      responses:
+        '200':
+          description: Comment deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [success]
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Comment deleted successfully
+                      deletedCommentId:
+                        type: string
+                        description: MongoDB ObjectId of the deleted comment
+                        example: 507f1f77bcf86cd799439012
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Comment not found or user not authorized to delete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
+              example:
+                status: error
+                data:
+                  message: Comment not found or user not authorized to delete this comment.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+# ============================================================================
+# COMPONENTS
+# ============================================================================
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT authentication token obtained from /auth/register or /auth/login endpoints.
+        
+        **Example:**
+        ```
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        ```
+
+  schemas:
+    # User Schemas
+    UserPublic:
+      type: object
+      description: Public user information (used in follower/following lists)
+      properties:
+        id:
+          type: string
+          description: MongoDB ObjectId
+          example: 507f1f77bcf86cd799439011
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        avatarUrl:
+          type: string
+          format: uri
+          nullable: true
+          description: URL to user's avatar image
+          example: https://example.com/avatars/johndoe.jpg
+        bio:
+          type: string
+          nullable: true
+          description: User's biography
+          example: Software developer passionate about open source
+
+    # Post Schemas
+    Post:
+      type: object
+      description: A post in the community feed
+      properties:
+        _id:
+          type: string
+          description: MongoDB ObjectId of the post
+          example: 507f1f77bcf86cd799439011
+        createdBy:
+          type: object
+          description: Author information (populated)
+          properties:
+            _id:
+              type: string
+              description: Author's MongoDB ObjectId
+              example: 507f1f77bcf86cd799439012
+            nickname:
+              type: string
+              description: Author's nickname
+              example: johndoe
+        postContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: The content of the post
+          example: Just built an amazing API with Node.js and Express!
+        postComments:
+          type: array
+          description: Array of comment ObjectIds (not populated in list views)
+          items:
+            type: string
+            example: 507f1f77bcf86cd799439013
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the post was created
+          example: '2024-01-15T10:30:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the post was last updated
+          example: '2024-01-15T10:30:00.000Z'
+
+    PostWithComments:
+      type: object
+      description: A post with fully populated comments
+      properties:
+        _id:
+          type: string
+          description: MongoDB ObjectId of the post
+          example: 507f1f77bcf86cd799439011
+        createdBy:
+          type: object
+          description: Author information (populated)
+          properties:
+            _id:
+              type: string
+              example: 507f1f77bcf86cd799439012
+            nickname:
+              type: string
+              example: johndoe
+        postContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          example: Just built an amazing API with Node.js and Express!
+        postComments:
+          type: array
+          description: Array of populated comment objects
+          items:
+            type: object
+            properties:
+              _id:
+                type: string
+                example: 507f1f77bcf86cd799439013
+              commentContent:
+                type: string
+                example: Great post! Thanks for sharing.
+              createdBy:
+                type: object
+                properties:
+                  _id:
+                    type: string
+                    example: 507f1f77bcf86cd799439014
+                  nickname:
+                    type: string
+                    example: janedoe
+        createdAt:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:30:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2024-01-15T10:30:00.000Z'
+
+    # Comment Schemas
+    Comment:
+      type: object
+      description: A comment on a post
+      properties:
+        _id:
+          type: string
+          description: MongoDB ObjectId of the comment
+          example: 507f1f77bcf86cd799439013
+        createdBy:
+          type: object
+          description: Author information (populated)
+          properties:
+            _id:
+              type: string
+              description: Author's MongoDB ObjectId
+              example: 507f1f77bcf86cd799439014
+            nickname:
+              type: string
+              description: Author's nickname
+              example: janedoe
+        parentPost:
+          type: string
+          description: MongoDB ObjectId of the parent post
+          example: 507f1f77bcf86cd799439011
+        commentContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: The content of the comment
+          example: Great post! Thanks for sharing.
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when the comment was created
+          example: '2024-01-15T11:00:00.000Z'
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when the comment was last updated
+          example: '2024-01-15T11:00:00.000Z'
+
+    # Error Schemas
+    ApiError:
+      type: object
+      description: Standard error response
+      properties:
+        status:
+          type: string
+          enum: [error]
+          example: error
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Human-readable error message
+              example: An error occurred
+
+    MongoDatabaseError:
+      type: object
+      description: MongoDB-specific error (e.g., duplicate key)
+      properties:
+        status:
+          type: string
+          enum: [error]
+          example: error
+        data:
+          type: object
+          properties:
+            code:
+              type: integer
+              description: MongoDB error code
+              example: 11000
+            message:
+              type: string
+              description: Human-readable error message
+              example: Email already exists.
+
+    InternalServerError:
+      type: object
+      description: Internal server error with tracking ID
+      properties:
+        status:
+          type: string
+          enum: [error]
+          example: error
+        data:
+          type: object
+          properties:
+            message:
+              type: string
+              description: Error message
+              example: Internal Server Error
+            errorId:
+              type: string
+              format: uuid
+              description: Unique error ID for tracking and debugging
+              example: 550e8400-e29b-41d4-a716-446655440000
+
+  responses:
+    BadRequest:
+      description: Bad request - Invalid input data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            status: error
+            data:
+              message: Email and password are required
+
+    Unauthorized:
+      description: Unauthorized - Missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            status: error
+            data:
+              message: User is not authenticated.
+
+    NotFound:
+      description: Not Found - Resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+          example:
+            status: error
+            data:
+              message: Resource not found.
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerError'
+          example:
+            status: error
+            data:
+              message: Internal Server Error
+              errorId: 550e8400-e29b-41d4-a716-446655440000
