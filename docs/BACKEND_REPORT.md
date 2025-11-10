@@ -23,7 +23,9 @@
 
 ## Overview
 
-The Mini Community backend is a RESTful API built with Node.js and Express that powers a social media platform similar to Twitter/X. The system features user authentication, post creation and management, commenting, user following, and robust security measures.
+The Mini Community backend is a RESTful API built with Node.js and Express that powers a social media platform similar
+to Twitter/X. The system features user authentication, post creation and management, commenting, user following, and
+robust security measures.
 
 **Core Functionality:**
 
@@ -68,11 +70,11 @@ The Mini Community backend is a RESTful API built with Node.js and Express that 
 - **Database**: MongoDB with Mongoose ODM 8.19.0
 - **Authentication**: JSON Web Tokens (JWT) via jsonwebtoken 9.0.2
 - **Validation**: Zod 4.1.11 schemas
-- **Security**: 
-  - Helmet 8.1.0 (security headers)
-  - CORS 2.8.5 (cross-origin resource sharing)
-  - express-rate-limit 8.1.0 (rate limiting)
-  - express-xss-sanitizer 2.0.1 (XSS protection)
+- **Security**:
+    - Helmet 8.1.0 (security headers)
+    - CORS 2.8.5 (cross-origin resource sharing)
+    - express-rate-limit 8.1.0 (rate limiting)
+    - express-xss-sanitizer 2.0.1 (XSS protection)
 - **Password Hashing**: bcryptjs 3.0.2
 - **HTTP Status Codes**: http-status-codes 2.3.0
 - **Logging**: morgan 1.10.1
@@ -92,9 +94,9 @@ The backend follows a layered architecture with clear separation of concerns:
                            │
 ┌──────────────────────────▼───────────────────────────────────┐
 │                    GLOBAL MIDDLEWARE LAYER                   │
-│  ┌──────────────┐ ┌──────────────┐ ┌──────────┐ ┌─────────┐ │
-│  │express.json()│ │Rate Limiting │ │   CORS   │ │ Helmet  │ │
-│  └──────────────┘ └──────────────┘ └──────────┘ └─────────┘ │
+│  ┌──────────────┐ ┌──────────────┐ ┌──────────┐ ┌─────────┐  │
+│  │express.json()│ │Rate Limiting │ │   CORS   │ │ Helmet  │  │
+│  └──────────────┘ └──────────────┘ └──────────┘ └─────────┘  │
 │  ┌──────────────┐                                            │
 │  │   Morgan     │                                            │
 │  └──────────────┘                                            │
@@ -102,16 +104,16 @@ The backend follows a layered architecture with clear separation of concerns:
                            │
 ┌──────────────────────────▼───────────────────────────────────┐
 │                      ROUTE LAYER                             │
-│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌───────────┐ │
-│  │ /api/v1/   │ │ /api/v1/   │ │ /api/v1/   │ │ /api/v1/  │ │
-│  │   auth     │ │   users    │ │   posts    │ │  comments │ │
-│  └────────────┘ └────────────┘ └────────────┘ └───────────┘ │
+│  ┌────────────┐ ┌────────────┐ ┌────────────┐ ┌───────────┐  │
+│  │ /api/v1/   │ │ /api/v1/   │ │ /api/v1/   │ │ /api/v1/  │  │
+│  │   auth     │ │   users    │ │   posts    │ │  comments │  │
+│  └────────────┘ └────────────┘ └────────────┘ └───────────┘  │
 └──────────────────────────┬───────────────────────────────────┘
                            │
 ┌──────────────────────────▼───────────────────────────────────┐
 │                 ROUTE-SPECIFIC MIDDLEWARE                    │
 │ ┌──────────────┐ ┌──────────────┐ ┌─────────────────────────┐│
-│ │ XSS Sanitize │ │ Validation   │ │   Authentication       ││
+│ │ XSS Sanitize │ │ Validation   │ │   Authentication        ││
 │ └──────────────┘ └──────────────┘ └─────────────────────────┘│
 │ ┌──────────────┐ ┌──────────────┐                            │
 │ │Authenticate  │ │ValidateObjId │                            │
@@ -121,17 +123,17 @@ The backend follows a layered architecture with clear separation of concerns:
                            │
 ┌──────────────────────────▼───────────────────────────────────┐
 │                   CONTROLLER LAYER                           │
-│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌──────────────┐ │
-│  │   Auth    │ │   Users   │ │   Posts   │ │   Comments   │ │
-│  │Controller │ │Controller │ │Controller │ │  Controller  │ │
-│  └───────────┘ └───────────┘ └───────────┘ └──────────────┘ │
+│  ┌───────────┐ ┌───────────┐ ┌───────────┐ ┌──────────────┐  │
+│  │   Auth    │ │   Users   │ │   Posts   │ │   Comments   │  │
+│  │Controller │ │Controller │ │Controller │ │  Controller  │  │
+│  └───────────┘ └───────────┘ └───────────┘ └──────────────┘  │
 └──────────────────────────┬───────────────────────────────────┘
                            │
 ┌──────────────────────────▼───────────────────────────────────┐
 │                     MODEL LAYER                              │
-│      ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐│
-│      │ User Model  │ │ Post Model  │ │  Comment Model      ││
-│      └─────────────┘ └─────────────┘ └─────────────────────┘│
+│      ┌─────────────┐ ┌─────────────┐ ┌─────────────────────┐ │
+│      │ User Model  │ │ Post Model  │ │  Comment Model      │ │
+│      └─────────────┘ └─────────────┘ └─────────────────────┘ │
 └──────────────────────────┬───────────────────────────────────┘
                            │
 ┌──────────────────────────▼───────────────────────────────────┐
@@ -147,63 +149,63 @@ The backend follows a layered architecture with clear separation of concerns:
 ```
 backend/
 ├── src/
-│   ├── app.ts                      # Express app configuration
-│   ├── server.ts                   # Server startup and database connection
-│   ├── configs/                    # Configuration files
-│   │   ├── corsOptions.ts         # CORS configuration
-│   │   └── rateLimitOptions.ts    # Rate limiting settings
-│   ├── controllers/               # Business logic handlers
-│   │   ├── authController.ts      # Authentication operations
-│   │   ├── usersControllers.ts    # User management operations
-│   │   ├── postsController.ts     # Post CRUD operations
-│   │   └── commentController.ts   # Comment operations
-│   ├── errors/                    # Custom error classes
-│   │   ├── index.ts              # Error exports
-│   │   ├── CustomError.ts        # Base error class
-│   │   ├── HttpError.ts          # HTTP-specific errors
-│   │   ├── BadRequestError.ts    # 400 errors
-│   │   ├── UnauthorizedError.ts  # 401 errors
-│   │   ├── UnauthenticatedError.ts # 401 errors
-│   │   ├── NotFoundError.ts      # 404 errors
-│   │   ├── ConflictError.ts      # 409 errors
-│   │   ├── InternalServerError.ts # 500 errors
-│   │   ├── DatabaseError.ts      # Database-specific errors
-│   │   ├── MongoDuplicateError.ts # Mongo duplicate key errors
-│   │   ├── JWTConfigurationError.ts # JWT config errors
-│   │   └── EnvVarsMissingError.ts # Environment variable errors
-│   ├── middlewares/              # Request processing middleware
-│   │   ├── authenticate.ts       # JWT authentication
+│   ├── app.ts                        # Express app configuration
+│   ├── server.ts                     # Server startup and database connection
+│   ├── configs/                      # Configuration files
+│   │   ├── corsOptions.ts            # CORS configuration
+│   │   └── rateLimitOptions.ts       # Rate limiting settings
+│   ├── controllers/                  # Business logic handlers
+│   │   ├── authController.ts         # Authentication operations
+│   │   ├── usersControllers.ts       # User management operations
+│   │   ├── postsController.ts        # Post CRUD operations
+│   │   └── commentController.ts      # Comment operations
+│   ├── errors/                       # Custom error classes
+│   │   ├── index.ts                  # Error exports
+│   │   ├── CustomError.ts            # Base error class
+│   │   ├── HttpError.ts              # HTTP-specific errors
+│   │   ├── BadRequestError.ts        # 400 errors
+│   │   ├── UnauthorizedError.ts      # 401 errors
+│   │   ├── UnauthenticatedError.ts   # 401 errors
+│   │   ├── NotFoundError.ts          # 404 errors
+│   │   ├── ConflictError.ts          # 409 errors
+│   │   ├── InternalServerError.ts    # 500 errors
+│   │   ├── DatabaseError.ts          # Database-specific errors
+│   │   ├── MongoDuplicateError.ts    # Mongo duplicate key errors
+│   │   ├── JWTConfigurationError.ts  # JWT config errors
+│   │   └── EnvVarsMissingError.ts    # Environment variable errors
+│   ├── middlewares/                  # Request processing middleware
+│   │   ├── authenticate.ts           # JWT authentication
 │   │   ├── authenticateOrContinue.ts # Optional authentication
-│   │   ├── validateWithZod.ts    # Input validation
-│   │   ├── validateObjectId.ts   # MongoDB ObjectID validation
-│   │   ├── errorHandler.ts       # Global error handling
-│   │   └── notFound.ts          # 404 handler
-│   ├── models/                   # Database models
-│   │   ├── User.ts              # User schema and methods
-│   │   ├── Post.ts              # Post schema
-│   │   └── Comment.ts           # Comment schema
-│   ├── routes/                   # Route definitions
-│   │   ├── authRoutes.ts        # Authentication endpoints
-│   │   ├── usersRoutes.ts       # User endpoints
-│   │   ├── postsRoutes.ts       # Post endpoints
-│   │   └── commentsRoutes.ts    # Comment endpoints (nested)
-│   ├── schemas/                  # Validation schemas
-│   │   ├── userSchemas.ts       # User input validation
-│   │   ├── postSchemas.ts       # Post validation
-│   │   └── commentSchemas.ts    # Comment validation
-│   ├── types/                    # TypeScript type definitions
-│   │   ├── api.ts               # API response types
-│   │   ├── express.d.ts         # Express extensions
-│   │   └── index.d.ts           # General types
-│   └── utils/                    # Utility functions
-│       ├── dbConnect.ts          # MongoDB connection
-│       ├── checkEnvVars.ts       # Environment variable validation
-│       ├── hashPassword.ts       # Password hashing
-│       ├── comparePasswords.ts   # Password comparison
-│       └── createJWT.ts          # JWT creation
-├── package.json                   # Dependencies and scripts
-├── tsconfig.json                  # TypeScript configuration
-└── eslint.config.mjs             # ESLint configuration
+│   │   ├── validateWithZod.ts        # Input validation
+│   │   ├── validateObjectId.ts       # MongoDB ObjectID validation
+│   │   ├── errorHandler.ts           # Global error handling
+│   │   └── notFound.ts               # 404 handler
+│   ├── models/                       # Database models
+│   │   ├── User.ts                   # User schema and methods
+│   │   ├── Post.ts                   # Post schema
+│   │   └── Comment.ts                # Comment schema
+│   ├── routes/                       # Route definitions
+│   │   ├── authRoutes.ts             # Authentication endpoints
+│   │   ├── usersRoutes.ts            # User endpoints
+│   │   ├── postsRoutes.ts            # Post endpoints
+│   │   └── commentsRoutes.ts         # Comment endpoints (nested)
+│   ├── schemas/                      # Validation schemas
+│   │   ├── userSchemas.ts            # User input validation
+│   │   ├── postSchemas.ts            # Post validation
+│   │   └── commentSchemas.ts         # Comment validation
+│   ├── types/                        # TypeScript type definitions
+│   │   ├── api.ts                    # API response types
+│   │   ├── express.d.ts              # Express extensions
+│   │   └── index.d.ts                # General types
+│   └── utils/                        # Utility functions
+│       ├── dbConnect.ts              # MongoDB connection
+│       ├── checkEnvVars.ts           # Environment variable validation
+│       ├── hashPassword.ts           # Password hashing
+│       ├── comparePasswords.ts       # Password comparison
+│       └── createJWT.ts              # JWT creation
+├── package.json                      # Dependencies and scripts
+├── tsconfig.json                     # TypeScript configuration
+└── eslint.config.mjs                 # ESLint configuration
 ```
 
 ---
@@ -232,7 +234,8 @@ When the server starts, it follows this sequence:
    ├─ Success ──┐
    └─ Failure ──┼── Throw EnvVarsMissingError → Exit process
                 │
-     ▼          │
+                │
+                ▼ 
 4. Select database URI based on NODE_ENV
    DB_URI = NODE_ENV === "production" ? MONGODB_URI : MONGODB_LOCAL_URI
      │
@@ -245,7 +248,8 @@ When the server starts, it follows this sequence:
    ├─ Success ──┐
    └─ Failure ──┼── Log error → Exit process with code 1
                 │
-     ▼          │
+                │
+                ▼ 
 7. Start HTTP server on specified PORT
    server.listen(PORT)
      │
@@ -286,10 +290,10 @@ Every incoming request goes through this pipeline:
 │ 1. express.json() ──────────► Parse JSON request body       │
 │ 2. rateLimit() ─────────────► Check rate limits (300/15min) │
 │    ├─ Under limit ──┐                                       │
-│    └─ Exceeded ─────┼─► 429 Too Many Requests              │
+│    └─ Exceeded ─────┼─► 429 Too Many Requests               │
 │ 3. cors() ───────────────────► Apply CORS policy            │
-│    ├─ Allowed origin ──┐                                    │
-│    └─ Blocked origin ───┼─► 403 Forbidden                  │
+│    ├─ Allowed origin ───┐                                   │
+│    └─ Blocked origin ───┼─► 403 Forbidden                   │
 │ 4. helmet() ─────────────────► Set security headers         │
 │ 5. morgan('tiny') ───────────► Log request                  │
 └─────────────────────────┬───────────────────────────────────┘
@@ -315,14 +319,14 @@ Every incoming request goes through this pipeline:
 │ • xss() ────────────────────► XSS sanitization              │
 │ • validateWithZod(schema) ──► Input validation              │
 │   ├─ Valid ────┐                                            │
-│   └─ Invalid ──┼─► 400 Bad Request with error details      │
+│   └─ Invalid ──┼─► 400 Bad Request with error details       │
 │ • authenticate() ───────────► JWT verification              │
 │   ├─ Valid token ──┐                                        │
-│   └─ Invalid ──────┼─► 401 Unauthorized                    │
+│   └─ Invalid ──────┼─► 401 Unauthorized                     │
 │ • authenticateOrContinue() ► Optional authentication        │
 │ • validateObjectId(param) ──► MongoDB ObjectID validation   │
 │   ├─ Valid ────┐                                            │
-│   └─ Invalid ──┼─► 400 Bad Request                         │
+│   └─ Invalid ──┼─► 400 Bad Request                          │
 └─────────────────────────┬───────────────────────────────────┘
                           │
                           ▼
@@ -484,7 +488,8 @@ If error occurs at any step:
 }
 ```
 
-**Security Note:** The error message for invalid email/password is intentionally generic to prevent user enumeration attacks.
+**Security Note:** The error message for invalid email/password is intentionally generic to prevent user enumeration
+attacks.
 
 #### 3. User Logout: `POST /api/v1/auth/logout`
 
@@ -601,7 +606,8 @@ If error occurs at any step:
 }
 ```
 
-**Note:** `isFollowing` is only calculated if the request is authenticated. This allows both public and authenticated access to user profiles.
+**Note:** `isFollowing` is only calculated if the request is authenticated. This allows both public and authenticated
+access to user profiles.
 
 #### 2. Update User Profile: `PATCH /api/v1/users/me`
 
@@ -1219,13 +1225,13 @@ interface IUser {
 **Schema Features:**
 
 - **Nickname uniqueness** enforced at database level
-- **Email uniqueness** enforced at database level  
+- **Email uniqueness** enforced at database level
 - **Email validation** using validator library
 - **Password automatically hashed** before saving (pre-save hook)
 - **Timestamps** managed by Mongoose (`{ timestamps: true }`)
 - **Instance methods**:
-  - `createJWT(payload?)`: Generate JWT token with user's ID
-  - `comparePassword(candidatePassword)`: Verify password against hash
+    - `createJWT(payload?)`: Generate JWT token with user's ID
+    - `comparePassword(candidatePassword)`: Verify password against hash
 
 **Database Indexes:**
 
@@ -1269,17 +1275,27 @@ interface IPost {
 
 ```javascript
 // For efficient chronological queries
-{ createdAt: -1 }
+{
+    createdAt: -1
+}
 ```
 
 **Recommended Additional Indexes:**
 
 ```javascript
 // For user-specific queries
-{ createdBy: 1, _id: -1 }
+{
+    createdBy: 1, _id
+:
+    -1
+}
 
 // For efficient pagination
-{ createdBy: 1, createdAt: -1 }
+{
+    createdBy: 1, createdAt
+:
+    -1
+}
 ```
 
 ### Comment Model
@@ -1307,7 +1323,11 @@ interface IComment {
 
 ```javascript
 // Compound index for efficient post-comment queries
-{ parentPost: 1, createdBy: 1 }
+{
+    parentPost: 1, createdBy
+:
+    1
+}
 ```
 
 ### Data Relationships
@@ -1346,8 +1366,8 @@ User (1) ────────── (Many) Comment
 ┌──────────────────────────────────────────────────────────────┐
 │                        USER MODEL                            │
 │  ┌────────────────────────────────────────────────────────┐  │
-│  │ _id, nickname, email, password, avatarUrl, bio        │  │
-│  │ followers[], following[], createdAt, updatedAt        │  │
+│  │ _id, nickname, email, password, avatarUrl, bio         │  │
+│  │ followers[], following[], createdAt, updatedAt         │  │
 │  └────────────────────────────────────────────────────────┘  │
 └────┬─────────────────────────────┬───────────────────────────┘
      │                             │
@@ -1372,16 +1392,16 @@ User (1) ────────── (Many) Comment
 **Cascade Deletion Rules:**
 
 1. **When a User is deleted:**
-   - Delete all posts created by the user
-   - Delete all comments created by the user
-   - Remove user from all other users' `followers` arrays
-   - Remove user from all other users' `following` arrays
+    - Delete all posts created by the user
+    - Delete all comments created by the user
+    - Remove user from all other users' `followers` arrays
+    - Remove user from all other users' `following` arrays
 
 2. **When a Post is deleted:**
-   - Delete all comments on the post
+    - Delete all comments on the post
 
 3. **When a Comment is deleted:**
-   - No cascade (comment ID remains in post's `postComments` array for simplicity)
+    - No cascade (comment ID remains in post's `postComments` array for simplicity)
 
 **Data Isolation:**
 
@@ -1406,9 +1426,15 @@ The backend implements defense-in-depth security with multiple layers:
 ```typescript
 {
     windowMs: 15 * 60 * 1000,  // 15 minutes
-    limit: 300,                 // Max 300 requests per window per IP
-    message: "Too many requests, please try again later.",
-    store: new MemoryStore()    // In-memory storage
+        limit
+:
+    300,                 // Max 300 requests per window per IP
+        message
+:
+    "Too many requests, please try again later.",
+        store
+:
+    new MemoryStore()    // In-memory storage
 }
 ```
 
@@ -1422,8 +1448,12 @@ The backend implements defense-in-depth security with multiple layers:
 ```typescript
 {
     origin: ['http://localhost:5173', 'http://10.0.0.102:5173'],
-    methods: ['GET', 'POST', 'PATCH', 'DELETE'],
-    optionsSuccessStatus: 200
+        methods
+:
+    ['GET', 'POST', 'PATCH', 'DELETE'],
+        optionsSuccessStatus
+:
+    200
 }
 ```
 
@@ -1507,8 +1537,8 @@ router.get('/me', authenticate, me);
 
 ```typescript
 // Example: Only allow users to delete their own posts
-Post.findOneAndDelete({ 
-    _id: postId, 
+Post.findOneAndDelete({
+    _id: postId,
     createdBy: userId  // Ensures ownership
 });
 ```
@@ -1626,9 +1656,9 @@ CustomError (Base)
 │         ERROR HANDLER MIDDLEWARE                       │
 │                                                        │
 │  Check error type:                                     │
-│  ├─ HttpError? ──────────► Extract message & status   │
-│  ├─ MongoDuplicateError? ─► Format duplicate key msg  │
-│  └─ Unknown error? ───────► Log with UUID, return 500 │
+│  ├─ HttpError? ──────────► Extract message & status    │
+│  ├─ MongoDuplicateError? ─► Format duplicate key msg   │
+│  └─ Unknown error? ───────► Log with UUID, return 500  │
 │                                                        │
 │  Format consistent response:                           │
 │  {                                                     │
@@ -1650,10 +1680,10 @@ All errors follow a consistent structure:
 
 ```json
 {
-    "status": "error",
-    "data": {
-        "message": "Descriptive error message for the client"
-    }
+  "status": "error",
+  "data": {
+    "message": "Descriptive error message for the client"
+  }
 }
 ```
 
@@ -1661,11 +1691,11 @@ For unknown errors:
 
 ```json
 {
-    "status": "error",
-    "data": {
-        "message": "Internal Server Error",
-        "errorId": "550e8400-e29b-41d4-a716-446655440000"
-    }
+  "status": "error",
+  "data": {
+    "message": "Internal Server Error",
+    "errorId": "550e8400-e29b-41d4-a716-446655440000"
+  }
 }
 ```
 
@@ -1677,10 +1707,16 @@ For unknown errors:
 // Input: { email: "invalid-email", password: "123" }
 // Zod validation fails
 {
-  "status": "error",
-  "data": {
-    "message": "Invalid email. String must contain at least 6 character(s)"
-  }
+    "status"
+:
+    "error",
+        "data"
+:
+    {
+        "message"
+    :
+        "Invalid email. String must contain at least 6 character(s)"
+    }
 }
 ```
 
@@ -1689,10 +1725,16 @@ For unknown errors:
 ```javascript
 // Missing or invalid JWT token
 {
-  "status": "error",
-  "data": {
-    "message": "Authorization header missing or malformed. Expected format: Bearer 'token'."
-  }
+    "status"
+:
+    "error",
+        "data"
+:
+    {
+        "message"
+    :
+        "Authorization header missing or malformed. Expected format: Bearer 'token'."
+    }
 }
 ```
 
@@ -1701,10 +1743,16 @@ For unknown errors:
 ```javascript
 // Accessing non-existent post
 {
-  "status": "error",
-  "data": {
-    "message": "Post not found."
-  }
+    "status"
+:
+    "error",
+        "data"
+:
+    {
+        "message"
+    :
+        "Post not found."
+    }
 }
 ```
 
@@ -1713,11 +1761,19 @@ For unknown errors:
 ```javascript
 // Attempting to register with existing email
 {
-  "status": "error",
-  "data": {
-    "code": 11000,
-    "message": "Email already exists."
-  }
+    "status"
+:
+    "error",
+        "data"
+:
+    {
+        "code"
+    :
+        11000,
+            "message"
+    :
+        "Email already exists."
+    }
 }
 ```
 
@@ -1726,11 +1782,19 @@ For unknown errors:
 ```javascript
 // Unexpected server error
 {
-  "status": "error",
-  "data": {
-    "message": "Internal Server Error",
-    "errorId": "550e8400-e29b-41d4-a716-446655440000"
-  }
+    "status"
+:
+    "error",
+        "data"
+:
+    {
+        "message"
+    :
+        "Internal Server Error",
+            "errorId"
+    :
+        "550e8400-e29b-41d4-a716-446655440000"
+    }
 }
 ```
 
@@ -1769,7 +1833,7 @@ router.post('/register', xss(), validateWithZod(schema), registerUser);
 // Try-catch blocks catch all errors
 try {
     const user = await User.create(userData);
-    res.status(201).json({ status: 'success', data: user });
+    res.status(201).json({status: 'success', data: user});
 } catch (error) {
     next(error);  // Pass to error handler
 }
@@ -1784,7 +1848,7 @@ const UserSchema = new Schema({
         type: String,
         required: true,
         unique: true,
-        validate: { validator: (email) => validator.isEmail(email) }
+        validate: {validator: (email) => validator.isEmail(email)}
     }
 });
 ```
@@ -1843,7 +1907,7 @@ UserSchema.methods.createJWT = async function createUserJWT(
     payload: Record<string, unknown> = {}
 ) {
     // Package the user's MongoDB _id as userId into the JWT payload
-    return createJWT({ userId: this._id, ...payload });
+    return createJWT({userId: this._id, ...payload});
 };
 ```
 
@@ -1855,8 +1919,8 @@ const createJWT = (payload: Record<string, unknown>): string => {
     if (!secret) {
         throw new JWTConfigurationError('JWT_SECRET is not defined');
     }
-    
-    return jwt.sign(payload, secret, { 
+
+    return jwt.sign(payload, secret, {
         expiresIn: '7d'  // Token expires in 7 days
     });
 };
@@ -1873,26 +1937,26 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
         throw new UnauthorizedError('Authorization header missing or malformed');
     }
-    
+
     // 2. Extract token
     const token = authHeader.split(' ')[1];
-    
+
     // 3. Verify token
     const secret = process.env.JWT_SECRET;
     if (!secret) {
         throw new InternalServerError('JWT_SECRET not configured');
     }
-    
+
     try {
         const payload = jwt.verify(token, secret) as JwtPayload;
-        
+
         // 4. Validate payload structure
         if (!isUserPayload(payload)) {
             throw new UnauthorizedError('Invalid token structure');
         }
-        
+
         // 5. Attach userId to request
-        req.user = { userId: payload.userId };
+        req.user = {userId: payload.userId};
         next();
     } catch (error) {
         throw new UnauthorizedError('JWT verification failed');
@@ -1907,30 +1971,33 @@ const authenticate = (req: Request, res: Response, next: NextFunction) => {
 ```typescript
 const authenticateOrContinue = (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers.authorization;
-    
+
     if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
         try {
             const payload = jwt.verify(token, process.env.JWT_SECRET!);
-            req.user = { userId: payload.userId };
+            req.user = {userId: payload.userId};
         } catch (error) {
             // Silently fail - continue as unauthenticated
         }
     }
-    
+
     next();  // Continue regardless of token validity
 };
 ```
 
-**Use Case:** Routes that provide different content for authenticated vs. unauthenticated users (e.g., showing "isFollowing" flag only for logged-in users).
+**Use Case:** Routes that provide different content for authenticated vs. unauthenticated users (e.g., showing "
+isFollowing" flag only for logged-in users).
 
 ### Token Payload
 
 ```json
 {
-    "userId": "60d5ecb54b24a1234567890b",
-    "iat": 1623456789,  // Issued At
-    "exp": 1624061589   // Expiration (7 days later)
+  "userId": "60d5ecb54b24a1234567890b",
+  "iat": 1623456789,
+  // Issued At
+  "exp": 1624061589
+  // Expiration (7 days later)
 }
 ```
 
@@ -1998,7 +2065,7 @@ const userBaseSchema = z.object({
 });
 
 const userRegisterSchema = userBaseSchema
-    .pick({ nickname: true, email: true, password: true })
+    .pick({nickname: true, email: true, password: true})
     .extend({
         avatarUrl: userBaseSchema.shape.avatarUrl.optional(),
         bio: userBaseSchema.shape.bio.optional(),
@@ -2061,7 +2128,7 @@ router.post('/register', xss(), validateWithZod(schema), registerUser);
 **2. Schema Parsing:**
 
 ```typescript
-const validateWithZod = (schema: z.Schema) => 
+const validateWithZod = (schema: z.Schema) =>
     async (req: Request, res: Response, next: NextFunction) => {
         try {
             // Zod validates structure, types, and constraints
@@ -2092,17 +2159,31 @@ const validateWithZod = (schema: z.Schema) =>
 ```typescript
 // Input
 {
-  "nickname": "  JohnDoe  ",
-  "email": "JOHN@EMAIL.COM",
-  "password": "secret123",
-  "unknownField": "malicious"
+    "nickname"
+:
+    "  JohnDoe  ",
+        "email"
+:
+    "JOHN@EMAIL.COM",
+        "password"
+:
+    "secret123",
+        "unknownField"
+:
+    "malicious"
 }
 
 // After XSS + Zod validation
 {
-  "nickname": "johndoe",    // Trimmed, lowercased (by Mongoose)
-  "email": "john@email.com", // Lowercased (by Mongoose)
-  "password": "secret123"    // unknownField removed
+    "nickname"
+:
+    "johndoe",    // Trimmed, lowercased (by Mongoose)
+        "email"
+:
+    "john@email.com", // Lowercased (by Mongoose)
+        "password"
+:
+    "secret123"    // unknownField removed
 }
 ```
 
@@ -2112,10 +2193,14 @@ const validateWithZod = (schema: z.Schema) =>
 
 ```json
 {
-  "nickname": "ab",              // Too short
-  "email": "not-an-email",       // Invalid format
-  "password": "123",             // Too short
-  "unknownField": "value"        // Not in schema
+  "nickname": "ab",
+  // Too short
+  "email": "not-an-email",
+  // Invalid format
+  "password": "123",
+  // Too short
+  "unknownField": "value"
+  // Not in schema
 }
 ```
 
@@ -2135,15 +2220,15 @@ const validateWithZod = (schema: z.Schema) =>
 **Middleware for MongoDB ObjectId validation:**
 
 ```typescript
-const validateObjectId = (paramName: string) => 
+const validateObjectId = (paramName: string) =>
     (req: Request, res: Response, next: NextFunction) => {
         const id = req.params[paramName];
-        
+
         if (!mongoose.Types.ObjectId.isValid(id)) {
             next(new BadRequestError(`Invalid ${paramName} format`));
             return;
         }
-        
+
         next();
     };
 ```
@@ -2152,7 +2237,7 @@ const validateObjectId = (paramName: string) =>
 
 ```typescript
 router.get('/posts/:id', validateObjectId('id'), getPostById);
-router.delete('/posts/:postId/comments/:id', 
+router.delete('/posts/:postId/comments/:id',
     validateObjectId('postId'),
     validateObjectId('id'),
     deleteComment
@@ -2196,22 +2281,22 @@ The follow/unfollow system uses a **bidirectional relationship** stored in the U
 ┌─────────────────────────────────────────────────────────────┐
 │              FOLLOW OPERATION                               │
 │                                                             │
-│ currentUser._id = 60d5ecb54b24a1234567890a                 │
-│ targetUser._id  = 60d5ecb54b24a1234567890b                 │
+│ currentUser._id = 60d5ecb54b24a1234567890a                  │
+│ targetUser._id  = 60d5ecb54b24a1234567890b                  │
 │                                                             │
 │ Transaction 1:                                              │
-│ User.findByIdAndUpdate(currentUser._id, {                  │
-│   $addToSet: { following: targetUser._id }                 │
+│ User.findByIdAndUpdate(currentUser._id, {                   │
+│   $addToSet: { following: targetUser._id }                  │
 │ })                                                          │
-│ ─────────────────────────────────────────────────────────► │
-│ currentUser.following.push(targetUser._id)                 │
+│ ──────────────────────────────────────────────────────────► │
+│ currentUser.following.push(targetUser._id)                  │
 │                                                             │
 │ Transaction 2:                                              │
-│ User.findByIdAndUpdate(targetUser._id, {                   │
-│   $addToSet: { followers: currentUser._id }                │
+│ User.findByIdAndUpdate(targetUser._id, {                    │
+│   $addToSet: { followers: currentUser._id }                 │
 │ })                                                          │
-│ ─────────────────────────────────────────────────────────► │
-│ targetUser.followers.push(currentUser._id)                 │
+│ ──────────────────────────────────────────────────────v───► │
+│ targetUser.followers.push(currentUser._id)                  │
 └─────────────────────────────────────────────────────────────┘
 
 Result:
@@ -2232,18 +2317,18 @@ targetUser.followers  = [..., 60d5ecb54b24a1234567890a]
 │              UNFOLLOW OPERATION                             │
 │                                                             │
 │ Transaction 1:                                              │
-│ User.findByIdAndUpdate(currentUser._id, {                  │
-│   $pull: { following: targetUser._id }                     │
+│ User.findByIdAndUpdate(currentUser._id, {                   │
+│   $pull: { following: targetUser._id }                      │
 │ })                                                          │
-│ ─────────────────────────────────────────────────────────► │
-│ Remove targetUser._id from currentUser.following           │
+│ ──────────────────────────────────────────────────────────► │
+│ Remove targetUser._id from currentUser.following            │
 │                                                             │
 │ Transaction 2:                                              │
-│ User.findByIdAndUpdate(targetUser._id, {                   │
-│   $pull: { followers: currentUser._id }                    │
+│ User.findByIdAndUpdate(targetUser._id, {                    │
+│   $pull: { followers: currentUser._id }                     │
 │ })                                                          │
-│ ─────────────────────────────────────────────────────────► │
-│ Remove currentUser._id from targetUser.followers           │
+│ ──────────────────────────────────────────────────────────► │
+│ Remove currentUser._id from targetUser.followers            │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -2260,12 +2345,12 @@ targetUser.followers  = [..., 60d5ecb54b24a1234567890a]
 │              FEED GENERATION                                │
 │                                                             │
 │ 1. Get current user's following list                        │
-│    User.findById(userId).select('following')               │
-│    → followedUserIds = [id1, id2, id3, ...]                │
+│    User.findById(userId).select('following')                │
+│    → followedUserIds = [id1, id2, id3, ...]                 │
 │                                                             │
 │ 2. Query posts from followed users                          │
-│    Post.find({ createdBy: { $in: followedUserIds } })      │
-│      .sort({ _id: -1 })                                    │
+│    Post.find({ createdBy: { $in: followedUserIds } })       │
+│      .sort({ _id: -1 })                                     │
 │      .limit(limit + 1)                                      │
 │      .populate('createdBy', 'nickname')                     │
 │                                                             │
@@ -2333,31 +2418,31 @@ const getPosts = async (req: Request, res: Response) => {
     // 1. Parse parameters
     const limit = parseInt(req.query.limit as string, 10) || 20;
     const cursor = req.query.cursor as string;
-    
+
     // 2. Build query
     const query: { _id?: { $lt: ObjectId } } = {};
     if (cursor) {
         // Get posts with _id less than cursor (older posts)
-        query._id = { $lt: new mongoose.Types.ObjectId(cursor) };
+        query._id = {$lt: new mongoose.Types.ObjectId(cursor)};
     }
-    
+
     // 3. Fetch limit + 1 items (extra item to check if there's a next page)
     const posts = await Post.find(query)
-        .sort({ _id: -1 })      // Newest first
+        .sort({_id: -1})      // Newest first
         .limit(limit + 1)        // Fetch one extra
         .populate('createdBy', 'nickname');
-    
+
     // 4. Check for next page
     const hasNextPage = posts.length > limit;
     if (hasNextPage) {
         posts.pop();  // Remove the extra item
     }
-    
+
     // 5. Determine next cursor
-    const nextCursor = hasNextPage 
-        ? posts[posts.length - 1]._id.toString() 
+    const nextCursor = hasNextPage
+        ? posts[posts.length - 1]._id.toString()
         : null;
-    
+
     // 6. Return response
     res.json({
         status: 'success',
@@ -2376,15 +2461,15 @@ Initial Request:
 GET /api/v1/posts?limit=3
 
 ┌──────────────────────────────────────────┐
-│ All Posts (newest first, by _id):       │
+│ All Posts (newest first, by _id):        │
 │                                          │
-│ Post A (_id: ...890a)  ◄─┐              │
-│ Post B (_id: ...890b)    │ Page 1       │
-│ Post C (_id: ...890c)  ◄─┘              │
-│ Post D (_id: ...890d)  ◄─┐              │
-│ Post E (_id: ...890e)    │ Page 2       │
-│ Post F (_id: ...890f)  ◄─┘              │
-│ Post G (_id: ...890g)  ◄── Page 3       │
+│ Post A (_id: ...890a)  ◄─┐               │
+│ Post B (_id: ...890b)    │ Page 1        │
+│ Post C (_id: ...890c)  ◄─┘               │
+│ Post D (_id: ...890d)  ◄─┐               │
+│ Post E (_id: ...890e)    │ Page 2        │
+│ Post F (_id: ...890f)  ◄─┘               │
+│ Post G (_id: ...890g)  ◄── Page 3        │
 └──────────────────────────────────────────┘
 
 Response:
@@ -2424,8 +2509,11 @@ GET /api/v1/posts?limit=20&cursor=60d5ecb54b24a1234567890c
 {
   "status": "success",
   "data": {
-    "posts": [ /* array of posts */ ],
-    "nextCursor": "60d5ecb54b24a1234567890e"  // or null if last page
+    "posts": [
+      /* array of posts */
+    ],
+    "nextCursor": "60d5ecb54b24a1234567890e"
+    // or null if last page
   }
 }
 ```
@@ -2434,13 +2522,13 @@ GET /api/v1/posts?limit=20&cursor=60d5ecb54b24a1234567890c
 
 ```typescript
 const fetchPosts = async (cursor: string | null = null) => {
-    const url = cursor 
+    const url = cursor
         ? `/api/v1/posts?limit=20&cursor=${cursor}`
         : '/api/v1/posts?limit=20';
-    
+
     const response = await fetch(url);
     const data = await response.json();
-    
+
     return {
         posts: data.data.posts,
         nextCursor: data.data.nextCursor,
@@ -2453,7 +2541,7 @@ let allPosts = [];
 let cursor = null;
 
 do {
-    const { posts, nextCursor } = await fetchPosts(cursor);
+    const {posts, nextCursor} = await fetchPosts(cursor);
     allPosts = [...allPosts, ...posts];
     cursor = nextCursor;
 } while (cursor !== null);
@@ -2468,10 +2556,10 @@ do {
 // For filtered queries, add compound indexes:
 
 // For user-specific posts
-postSchema.index({ createdBy: 1, _id: -1 });
+postSchema.index({createdBy: 1, _id: -1});
 
 // For comments by post
-commentSchema.index({ parentPost: 1, _id: -1 });
+commentSchema.index({parentPost: 1, _id: -1});
 ```
 
 **Query Performance:**
@@ -2491,9 +2579,9 @@ commentSchema.index({ parentPost: 1, _id: -1 });
 
 ```typescript
 // Efficient: Uses index, constant performance
-const query = cursor ? { _id: { $lt: cursor } } : {};
+const query = cursor ? {_id: {$lt: cursor}} : {};
 const posts = await Post.find(query)
-    .sort({ _id: 1 })
+    .sort({_id: 1})
     .limit(limit + 1);
 
 // Inefficient: Performance degrades with page number
@@ -2513,11 +2601,11 @@ const posts = await Post.find()
 
 ```javascript
 // Post model
-postSchema.index({ createdAt: -1 });           // For chronological queries
-postSchema.index({ createdBy: 1, _id: -1 });   // For user-specific pagination
+postSchema.index({createdAt: -1});           // For chronological queries
+postSchema.index({createdBy: 1, _id: -1});   // For user-specific pagination
 
 // Comment model
-commentSchema.index({ parentPost: 1, createdBy: 1 });  // For post comments
+commentSchema.index({parentPost: 1, createdBy: 1});  // For post comments
 ```
 
 **3. Selective Field Population:**
@@ -2589,7 +2677,9 @@ const hashedPassword = await bcrypt.hash(password, 12);
 // Prevents resource exhaustion from abuse
 {
     windowMs: 15 * 60 * 1000,  // 15 minutes
-    limit: 300                  // 300 requests per window
+        limit
+:
+    300                  // 300 requests per window
 }
 ```
 
@@ -2621,7 +2711,7 @@ const posts = await Post.find().populate('createdBy');  // 1 query
 User.findById(userId).select('nickname email bio');
 
 // Exclude sensitive fields
-User.findOne({ email }).select('-password');
+User.findOne({email}).select('-password');
 ```
 
 **3. Limit Result Sets:**
@@ -2631,7 +2721,7 @@ User.findOne({ email }).select('-password');
 Post.find().limit(100);
 
 // For counting, use countDocuments (more efficient than .length)
-const count = await Post.countDocuments({ createdBy: userId });
+const count = await Post.countDocuments({createdBy: userId});
 ```
 
 ### Monitoring and Logging
@@ -2657,14 +2747,6 @@ console.error(`[${timestamp}] [ErrorID: ${errorId}] Error: ${error.message}`);
 ```typescript
 mongoose.set('debug', process.env.NODE_ENV === 'development');
 ```
-
-**Recommendations for Production:**
-
-- Use external logging service (LogDNA, Datadog, New Relic)
-- Monitor response times
-- Track error rates
-- Set up alerts for anomalies
-- Use APM (Application Performance Monitoring) tools
 
 ### Caching Strategies (Future Enhancements)
 
@@ -2809,8 +2891,13 @@ npm run lint:fix
     "declarationMap": true,
     "sourceMap": true
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }
 ```
 
@@ -2862,16 +2949,16 @@ NODE_ENV=production npm start
 backend/
 ├── src/
 └── tests/
-    ├── unit/              # Unit tests for utilities
+    ├── unit/                        # Unit tests for utilities
     │   ├── hashPassword.test.ts
     │   ├── createJWT.test.ts
     │   └── comparePasswords.test.ts
-    ├── integration/       # Integration tests for routes
+    ├── integration/                 # Integration tests for routes
     │   ├── auth.test.ts
     │   ├── users.test.ts
     │   ├── posts.test.ts
     │   └── comments.test.ts
-    └── e2e/              # End-to-end tests
+    └── e2e/                         # End-to-end tests
         └── userFlow.test.ts
 ```
 
@@ -3028,7 +3115,8 @@ The Mini Community backend demonstrates modern Node.js/Express.js best practices
 
 ### Final Thoughts
 
-This backend provides a solid foundation for a social media platform. The architecture is clean, secure, and scalable. The code is well-organized and type-safe, making it maintainable and easy to extend.
+This backend provides a solid foundation for a social media platform. The architecture is clean, secure, and scalable.
+The code is well-organized and type-safe, making it maintainable and easy to extend.
 
 **Next Steps:**
 
@@ -3040,12 +3128,11 @@ This backend provides a solid foundation for a social media platform. The archit
 6. Implement email notifications
 7. Add analytics and metrics
 
-The system is ready for deployment and can handle production traffic with appropriate infrastructure (MongoDB Atlas, hosting platform, CDN).
+The system is ready for deployment and can handle production traffic with appropriate infrastructure (MongoDB Atlas,
+hosting platform, CDN).
 
 ---
 
 **Document Version:** 1.0  
-**Last Updated:** 2025-11-10  
-**Author:** Technical Documentation Team  
-**Target Audience:** Developers, DevOps Engineers, Technical Leads
+**Last Updated:** 2025-11-10
 
