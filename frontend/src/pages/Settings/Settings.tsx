@@ -4,6 +4,8 @@ import { deleteUnwrapped } from '../../utils/axiosInstance.ts';
 import { VStack } from '../../components/Layout/VStack.tsx';
 import { HStack } from '../../components/Layout/HStack.tsx';
 import PillButton from '../../components/Buttons/PillButton/PillButton.tsx';
+import Separator from '../../components/Separator/Separator.tsx';
+import styles from './Settings.module.css';
 
 type ServerResponse = {
     message: string;
@@ -16,6 +18,8 @@ const Settings = () => {
     }>();
 
     const navigate = useNavigate();
+
+    const user = localStorage.getItem('email');
 
     const handleLogout = () => {
         localStorage.clear();
@@ -67,6 +71,28 @@ const Settings = () => {
                 >
                     Delete account
                 </PillButton>
+
+                <HStack
+                    justify={'center'}
+                    style={{ marginTop: '10px', marginBottom: '-10px' }}
+                >
+                    <p className={styles.footer}>Logged in as {user}</p>
+                </HStack>
+
+                <VStack align={'center'}>
+                    <Separator />
+                    <HStack>
+                        <p className={styles.footer}>Version 1.0 - </p>
+                        <a
+                            href={'https://github.com/ednanf/mini-community'}
+                            target={'_blank'}
+                            rel={'noreferrer'}
+                            className={styles.footer}
+                        >
+                            GitHub
+                        </a>
+                    </HStack>
+                </VStack>
             </VStack>
         </HStack>
     );
