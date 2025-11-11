@@ -1,8 +1,8 @@
 import mongoose, { Schema, HydratedDocument, model, Types } from 'mongoose';
 import validator from 'validator';
-import hashPassword from '../utils/hashPassword';
-import createJWT from '../utils/createJWT';
-import comparePasswords from '../utils/comparePasswords';
+import hashPassword from '../utils/hashPassword.js';
+import createJWT from '../utils/createJWT.js';
+import comparePasswords from '../utils/comparePasswords.js';
 
 // TypeScript interface (when just passing user data around)
 export interface IUser {
@@ -94,7 +94,9 @@ UserSchema.pre('save', async function hashPasswordBeforeSave() {
 });
 
 // User schema methods
-UserSchema.methods.createJWT = async function createUserJWT(payload: Record<string, unknown> = {}) {
+UserSchema.methods.createJWT = async function createUserJWT(
+    payload: Record<string, unknown> = {},
+) {
     // Package the user's MongoDB _id as userId into the JWT payload.
     // This is  where the userId is embedded into the token.
     return createJWT({ userId: this._id, ...payload });

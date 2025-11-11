@@ -17,8 +17,8 @@ import bcrypt from 'bcryptjs';
  * - This function is asynchronous and must be awaited to get the result.
  */
 const comparePasswords = async (
-  candidatePassword: string,
-  hashedPassword: string,
+    candidatePassword: string,
+    hashedPassword: string,
 ): Promise<boolean> => bcrypt.compare(candidatePassword, hashedPassword);
 
 export default comparePasswords;

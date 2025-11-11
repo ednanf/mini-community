@@ -1,6 +1,6 @@
 import express, { RequestHandler } from 'express';
 import { xss } from 'express-xss-sanitizer';
-import authenticate from '../middlewares/authenticate';
+import authenticate from '../middlewares/authenticate.js';
 import {
     getPosts,
     createPost,
@@ -9,11 +9,11 @@ import {
     getPostById,
     deletePost,
     getPostsByUserId,
-} from '../controllers/postsController';
-import commentsRouter from '../routes/commentsRoutes'; // Needed for nested routes
-import validateObjectId from '../middlewares/validateObjectId';
-import validateWithZod from '../middlewares/validateWithZod';
-import postCreateSchema from '../schemas/postSchemas';
+} from '../controllers/postsController.js';
+import commentsRouter from '../routes/commentsRoutes.js'; // Needed for nested routes
+import validateObjectId from '../middlewares/validateObjectId.js';
+import validateWithZod from '../middlewares/validateWithZod.js';
+import postCreateSchema from '../schemas/postSchemas.js';
 
 const router = express.Router();
 

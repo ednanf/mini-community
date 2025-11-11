@@ -14,7 +14,7 @@
 
 import { Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { AuthenticatedRequest } from '../types/express';
+import { AuthenticatedRequest } from '../types/express.js';
 
 const authenticateOrContinue = async (
     req: AuthenticatedRequest,
@@ -26,7 +26,10 @@ const authenticateOrContinue = async (
     if (authHeader && authHeader.startsWith('Bearer ')) {
         const token = authHeader.split(' ')[1];
         try {
-            const payload = jwt.verify(token, process.env.JWT_SECRET as string) as {
+            const payload = jwt.verify(
+                token,
+                process.env.JWT_SECRET as string,
+            ) as {
                 userId: string;
             };
             // If token is valid, attach user to the request

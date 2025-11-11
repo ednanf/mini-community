@@ -16,8 +16,8 @@ import bcrypt from 'bcryptjs';
  * - Always store hashed passwords instead of plain text passwords for security.
  */
 const hashPassword = async (password: string): Promise<string> => {
-  const saltRounds = 10; // Number of salt rounds to strengthen the hash
-  return bcrypt.hash(password, saltRounds); // Hash the password with the specified salt rounds
+    const saltRounds = 10; // Number of salt rounds to strengthen the hash
+    return bcrypt.hash(password, saltRounds); // Hash the password with the specified salt rounds
 };
 
 export default hashPassword;

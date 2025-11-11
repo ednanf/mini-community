@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import Post, { IPost } from '../models/Post';
+import Post, { IPost } from '../models/Post.js';
 import mongoose from 'mongoose';
 import {
     ApiResponse,
@@ -7,11 +7,11 @@ import {
     PostDeleteSuccess,
     PostGetByIdSuccess,
     PostsGetSuccess,
-} from '../types/api';
+} from '../types/api.js';
 import { StatusCodes } from 'http-status-codes';
-import { AuthenticatedRequest } from '../types/express';
-import { NotFoundError, UnauthenticatedError } from '../errors';
-import User from '../models/User';
+import { AuthenticatedRequest } from '../types/express.js';
+import { NotFoundError, UnauthenticatedError } from '../errors/index.js';
+import User from '../models/User.js';
 
 interface UserWithFollowing {
     following: mongoose.Types.ObjectId[];

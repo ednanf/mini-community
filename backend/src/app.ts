@@ -4,15 +4,15 @@ import cors from 'cors';
 import helmet from 'helmet';
 import morgan from 'morgan';
 
-import corsOptions from './configs/corsOptions';
-import rateLimitOptions from './configs/rateLimitOptions';
+import corsOptions from './configs/corsOptions.js';
+import rateLimitOptions from './configs/rateLimitOptions.js';
 
-import authRoutes from './routes/authRoutes';
-import usersRoutes from './routes/usersRoutes';
-import postsRoutes from './routes/postsRoutes';
-import commentsRoutes from './routes/commentsRoutes';
-import notFound from './middlewares/notFound';
-import errorHandler from './middlewares/errorHandler';
+import authRoutes from './routes/authRoutes.js';
+import usersRoutes from './routes/usersRoutes.js';
+import postsRoutes from './routes/postsRoutes.js';
+import commentsRoutes from './routes/commentsRoutes.js';
+import notFound from './middlewares/notFound.js';
+import errorHandler from './middlewares/errorHandler.js';
 
 const app = express();
 

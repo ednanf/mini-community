@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import User, { IUserDocument } from '../models/User';
-import comparePasswords from '../utils/comparePasswords';
+import User, { IUserDocument } from '../models/User.js';
+import comparePasswords from '../utils/comparePasswords.js';
 import {
     BadRequestError,
     UnauthenticatedError,
     UnauthorizedError,
-} from '../errors';
+} from '../errors/index.js';
 import {
     ApiResponse,
     UserRegisterSuccess,
@@ -15,8 +15,8 @@ import {
     UserLoginSuccess,
     UserLogoutSuccess,
     UserMeSuccess,
-} from '../types/api';
-import { AuthenticatedRequest } from '../types/express';
+} from '../types/api.js';
+import { AuthenticatedRequest } from '../types/express.js';
 
 const registerUser = async (
     req: Request,

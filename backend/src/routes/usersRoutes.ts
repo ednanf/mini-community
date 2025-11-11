@@ -8,12 +8,12 @@ import {
     followUser,
     unfollowUser,
     isFollowing,
-} from '../controllers/usersControllers';
+} from '../controllers/usersControllers.js';
 import { xss } from 'express-xss-sanitizer';
-import authenticate from '../middlewares/authenticate';
-import authenticateOrContinue from '../middlewares/authenticateOrContinue';
-import validateWithZod from '../middlewares/validateWithZod';
-import { userPatchSchema } from '../schemas/userSchemas';
+import authenticate from '../middlewares/authenticate.js';
+import authenticateOrContinue from '../middlewares/authenticateOrContinue.js';
+import validateWithZod from '../middlewares/validateWithZod.js';
+import { userPatchSchema } from '../schemas/userSchemas.js';
 
 const router = express.Router();
 

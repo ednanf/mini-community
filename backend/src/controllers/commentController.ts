@@ -1,16 +1,16 @@
 import { Request, Response, NextFunction } from 'express';
 import mongoose from 'mongoose';
-import Comment, { IComment } from '../models/Comment';
+import Comment, { IComment } from '../models/Comment.js';
 import {
     ApiResponse,
     CommentCreateSuccess,
     CommentDeleteSuccess,
     CommentGetSuccess,
-} from '../types/api';
+} from '../types/api.js';
 import { StatusCodes } from 'http-status-codes';
-import { NotFoundError, UnauthenticatedError } from '../errors';
-import { AuthenticatedRequest } from '../types/express';
-import Post from '../models/Post';
+import { NotFoundError, UnauthenticatedError } from '../errors/index.js';
+import { AuthenticatedRequest } from '../types/express.js';
+import Post from '../models/Post.js';
 
 const getComments = async (req: Request, res: Response, next: NextFunction) => {
     try {

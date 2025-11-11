@@ -1,4 +1,4 @@
-import { AuthenticatedRequest } from '../types/express';
+import { AuthenticatedRequest } from '../types/express.js';
 import { NextFunction, Response, Request } from 'express';
 import {
     ApiResponse,
@@ -12,13 +12,13 @@ import {
     UserFollowSuccess,
     UserUnfollowSuccess,
     UserIsFollowingSuccess,
-} from '../types/api';
-import { BadRequestError, NotFoundError } from '../errors';
-import User, { IUser } from '../models/User';
+} from '../types/api.js';
+import { BadRequestError, NotFoundError } from '../errors/index.js';
+import User, { IUser } from '../models/User.js';
 import { StatusCodes } from 'http-status-codes';
 import { Types } from 'mongoose';
-import Post from '../models/Post';
-import Comment from '../models/Comment';
+import Post from '../models/Post.js';
+import Comment from '../models/Comment.js';
 
 const getUserById = async (req: Request, res: Response, next: NextFunction) => {
     try {

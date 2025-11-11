@@ -3,9 +3,9 @@ import {
     userLoginSchema,
     userPatchSchema,
     userRegisterSchema,
-} from '../schemas/userSchemas';
-import { IPost } from '../models/Post';
-import { IComment } from '../models/Comment';
+} from '../schemas/userSchemas.js';
+import { IPost } from '../models/Post.js';
+import { IComment } from '../models/Comment.js';
 
 /*
  * Generic types

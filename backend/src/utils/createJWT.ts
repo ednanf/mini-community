@@ -3,7 +3,7 @@ import { StringValue } from 'ms';
 import { JWTConfigurationError } from '../errors/index.js';
 
 interface JwtUserPayload {
-  userId: string;
+    userId: string;
 }
 
 /**
@@ -26,29 +26,33 @@ interface JwtUserPayload {
  * console.log(token); // Logs the generated JWT
  */
 const createJWT = (payload: JwtUserPayload): string => {
-  const { JWT_SECRET: jwtSecret, JWT_LIFETIME: jwtLifetime } = process.env;
+    const { JWT_SECRET: jwtSecret, JWT_LIFETIME: jwtLifetime } = process.env;
 
-  if (!jwtSecret) {
-    throw new JWTConfigurationError('JWT_SECRET is not defined in environment variables.');
-  }
+    if (!jwtSecret) {
+        throw new JWTConfigurationError(
+            'JWT_SECRET is not defined in environment variables.',
+        );
+    }
 
-  if (!jwtLifetime) {
-    throw new JWTConfigurationError('JWT_LIFETIME is not defined in environment variables.');
-  }
+    if (!jwtLifetime) {
+        throw new JWTConfigurationError(
+            'JWT_LIFETIME is not defined in environment variables.',
+        );
+    }
 
-  // Validate the JWT_LIFETIME format
-  if (!/^\d+[smhdwy]$/.test(jwtLifetime)) {
-    throw new JWTConfigurationError(
-      `JWT_LIFETIME format invalid: ${jwtLifetime}. Expected format like '30d', '1h', '15m'.`,
-    );
-  }
+    // Validate the JWT_LIFETIME format
+    if (!/^\d+[smhdwy]$/.test(jwtLifetime)) {
+        throw new JWTConfigurationError(
+            `JWT_LIFETIME format invalid: ${jwtLifetime}. Expected format like '30d', '1h', '15m'.`,
+        );
+    }
 
-  const options: SignOptions = {
-    algorithm: 'HS256', // HMAC SHA-256 for signing
-    expiresIn: jwtLifetime as StringValue, // Lifetime of the token, e.g., '1h', '2d'
-  };
+    const options: SignOptions = {
+        algorithm: 'HS256', // HMAC SHA-256 for signing
+        expiresIn: jwtLifetime as StringValue, // Lifetime of the token, e.g., '1h', '2d'
+    };
 
-  return jwt.sign(payload, jwtSecret as Secret, options);
+    return jwt.sign(payload, jwtSecret as Secret, options);
 };
 
 export default createJWT;
