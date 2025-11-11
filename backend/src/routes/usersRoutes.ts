@@ -7,6 +7,7 @@ import {
     getUserFollowing,
     followUser,
     unfollowUser,
+    isFollowing,
 } from '../controllers/usersControllers';
 import { xss } from 'express-xss-sanitizer';
 import authenticate from '../middlewares/authenticate';
@@ -29,5 +30,6 @@ router.get('/:id/followers', authenticate, getUserFollowers);
 router.get('/:id/following', authenticate, getUserFollowing);
 router.post('/follow/:id', authenticate, followUser as RequestHandler);
 router.post('/unfollow/:id', authenticate, unfollowUser as RequestHandler);
+router.get('/:id/is-following', authenticate, isFollowing as RequestHandler);
 
 export default router;

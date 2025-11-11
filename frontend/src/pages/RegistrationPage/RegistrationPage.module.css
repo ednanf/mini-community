@@ -1,0 +1,13 @@
+.footerText {
+    font-size: 14px;
+    color: var(--color-text-secondary);
+}
+
+.link {
+    color: var(--color-accent-blue);
+    text-decoration: none;
+}
+
+.link:hover {
+    text-decoration: underline;
+}

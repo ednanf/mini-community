@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { userLoginSchema, userPatchSchema, userRegisterSchema } from '../schemas/userSchemas';
+import {
+    userLoginSchema,
+    userPatchSchema,
+    userRegisterSchema,
+} from '../schemas/userSchemas';
 import { IPost } from '../models/Post';
 import { IComment } from '../models/Comment';
 
@@ -38,10 +42,12 @@ export interface UserBase {
 }
 
 export interface UserRegisterSuccess extends UserBase {
+    id: string;
     token: string;
 }
 
 export interface UserLoginSuccess extends UserBase {
+    id: string;
     token: string;
 }
 
@@ -49,8 +55,10 @@ export interface UserLogoutSuccess {
     message: string;
 }
 
-export interface UserMeSuccess extends UserBase {
+export interface UserMeSuccess extends Partial<UserBase> {
     id: string;
+    bio?: string | null;
+    avatarUrl?: string | null;
 }
 
 /*
@@ -104,6 +112,11 @@ export interface UserUnfollowSuccess {
     unfollowedUser: string;
 }
 
+export interface UserIsFollowingSuccess {
+    message: string;
+    isFollowing: boolean;
+}
+
 /*
  * Post types
  * **/
@@ -113,17 +126,17 @@ export interface PostBase {
 }
 
 export interface PostsGetSuccess extends PostBase {
-    content: IPost[];
+    posts: IPost[];
     nextCursor: string | null; // null if there are no more posts to fetch
 }
 
 export interface PostCreateSuccess {
     message: string;
-    content: IPost;
+    postContent: IPost;
 }
 
 export interface PostGetByIdSuccess extends PostBase {
-    content: IPost;
+    postContent: IPost;
 }
 
 export interface PostDeleteSuccess extends PostBase {
@@ -139,12 +152,12 @@ export interface CommentBase {
 }
 
 export interface CommentGetSuccess extends CommentBase {
-    content: IComment[];
+    comments: IComment[];
     nextCursor: string | null; // null if there are no more comments to fetch
 }
 
 export interface CommentCreateSuccess extends CommentBase {
-    content: IComment;
+    commentContent: IComment;
 }
 
 export interface CommentDeleteSuccess extends CommentBase {

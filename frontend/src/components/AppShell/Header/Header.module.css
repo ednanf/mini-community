@@ -1,0 +1,18 @@
+.header {
+    font-family: 'Inter', sans-serif;
+    width: 100%;
+    /* safe-area-inset-top makes the header go behind the clock on iOS */
+    height: 3rem;
+
+}
+
+.backButtonWrapper {
+    position: absolute;
+    left: 1rem;
+    top: calc(50% + env(safe-area-inset-top) / 2);
+    transform: translateY(-50%);
+}
+
+.children {
+    font-size: 1.3rem;
+}

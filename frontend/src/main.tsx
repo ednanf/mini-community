@@ -1,10 +1,45 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
-import App from './App.tsx'
+import { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+
+// Pages
+import AppShell from './components/AppShell/AppShell.tsx';
+import EditProfile from './pages/EditProfile/EditProfile.tsx';
+import GlobalFeed from './pages/GlobalFeed/GlobalFeed.tsx';
+import LandingPage from './pages/LandingPage/LandingPage.tsx';
+import LoginPage from './pages/LoginPage/LoginPage.tsx';
+import MyFeed from './pages/MyFeed/MyFeed.tsx';
+import NotFound from './pages/NotFound/NotFound.tsx';
+import NewPost from './pages/NewPost/NewPost.tsx';
+import PostDetails from './pages/PostDetails/PostDetails.tsx';
+import RegistrationPage from './pages/RegistrationPage/RegistrationPage.tsx';
+import Settings from './pages/Settings/Settings.tsx';
+import ViewProfile from './pages/ViewProfile/ViewProfile.tsx';
+
+import './index.css';
+
+const router = createBrowserRouter([
+    {
+        path: '/',
+        element: <AppShell />,
+        children: [
+            { index: true, element: <LandingPage /> },
+            { path: 'login', element: <LoginPage /> },
+            { path: 'register', element: <RegistrationPage /> },
+            { path: 'global-feed', element: <GlobalFeed /> },
+            { path: 'my-feed', element: <MyFeed /> },
+            { path: 'edit-profile', element: <EditProfile /> },
+            { path: 'profile/:userId', element: <ViewProfile /> },
+            { path: 'posts/:postId', element: <PostDetails /> },
+            { path: 'new-post', element: <NewPost /> },
+            { path: 'settings', element: <Settings /> },
+            { path: '*', element: <NotFound /> },
+        ],
+    },
+]);
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-)
+    <StrictMode>
+        <RouterProvider router={router} />
+    </StrictMode>,
+);

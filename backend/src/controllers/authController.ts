@@ -2,7 +2,11 @@ import { Request, Response, NextFunction } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import User, { IUserDocument } from '../models/User';
 import comparePasswords from '../utils/comparePasswords';
-import { BadRequestError, UnauthenticatedError, UnauthorizedError } from '../errors';
+import {
+    BadRequestError,
+    UnauthenticatedError,
+    UnauthorizedError,
+} from '../errors';
 import {
     ApiResponse,
     UserRegisterSuccess,
@@ -14,7 +18,11 @@ import {
 } from '../types/api';
 import { AuthenticatedRequest } from '../types/express';
 
-const registerUser = async (req: Request, res: Response, next: NextFunction) => {
+const registerUser = async (
+    req: Request,
+    res: Response,
+    next: NextFunction,
+) => {
     const { email, password, nickname }: UserRegisterBody = req.body;
     if (!email || !password || !nickname) {
         next(new BadRequestError('Email and password are required'));
@@ -22,13 +30,18 @@ const registerUser = async (req: Request, res: Response, next: NextFunction) => 
     }
 
     try {
-        const newUser: IUserDocument = await User.create({ email, password, nickname });
+        const newUser: IUserDocument = await User.create({
+            email,
+            password,
+            nickname,
+        });
         const token = await newUser.createJWT();
 
         const response: ApiResponse<UserRegisterSuccess> = {
             status: 'success',
             data: {
                 message: 'User registered successfully.',
+                id: newUser._id.toString(),
                 nickname: newUser.nickname,
                 email: newUser.email,
                 token,
@@ -50,15 +63,28 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
 
     try {
         // .select('+password') includes password field for verification
-        const candidateUser = await User.findOne<IUserDocument>({ email }).select('+password');
+        const candidateUser = await User.findOne<IUserDocument>({
+            email,
+        }).select('+password');
         if (!candidateUser) {
-            next(new UnauthorizedError('There is an issue with your email or password'));
+            next(
+                new UnauthorizedError(
+                    'There is an issue with your email or password',
+                ),
+            );
             return;
         }
 
-        const isPasswordValid = await comparePasswords(password, candidateUser.password);
+        const isPasswordValid = await comparePasswords(
+            password,
+            candidateUser.password,
+        );
         if (!isPasswordValid) {
-            next(new UnauthorizedError('There is an issue with your email or password.'));
+            next(
+                new UnauthorizedError(
+                    'There is an issue with your email or password.',
+                ),
+            );
             return;
         }
 
@@ -68,6 +94,7 @@ const loginUser = async (req: Request, res: Response, next: NextFunction) => {
             status: 'success',
             data: {
                 message: 'Log in successful. Welcome back!',
+                id: candidateUser._id.toString(),
                 nickname: candidateUser.nickname,
                 email: candidateUser.email,
                 token,
@@ -91,7 +118,11 @@ const logoutUser = (_req: Request, res: Response) => {
     res.status(StatusCodes.OK).json(response);
 };
 
-const me = async (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+const me = async (
+    req: AuthenticatedRequest,
+    res: Response,
+    next: NextFunction,
+) => {
     const { userId } = req.user;
 
     try {
@@ -107,7 +138,8 @@ const me = async (req: AuthenticatedRequest, res: Response, next: NextFunction) 
                 message: 'User retrieved successfuly',
                 id: user._id.toString(),
                 nickname: user?.nickname,
-                email: user?.email,
+                bio: user?.bio,
+                avatarUrl: user?.avatarUrl,
             },
         };
 

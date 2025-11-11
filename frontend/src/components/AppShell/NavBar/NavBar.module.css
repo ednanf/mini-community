@@ -1,0 +1,28 @@
+.navBar {
+
+    display: flex;
+    justify-content: space-around;
+    gap: 0.1rem;
+    padding: 0.3rem 0.1rem;
+    align-items: center;
+    border: 1px solid var(--color-navbar-border);
+    border-radius: 10rem;
+    background-color: var(--color-navbar-background);
+    backdrop-filter: var(--navbar-backdrop-filter);
+    --webkit-backdrop-filter: var(--navbar-backdrop-filter);
+    flex-grow: 1;
+}
+
+.navBarHStack {
+    position: fixed;
+    bottom: 1rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10; /* Ensures it's above the content */
+    display: flex;
+    gap: 1.5rem;
+    align-items: stretch;
+    width: 90%;
+    max-width: 1000px;
+    min-width: 300px;
+}

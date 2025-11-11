@@ -1,0 +1,39 @@
+.button {
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px; /* Pill shape */
+    font-weight: 600;
+    font-size: 16px;
+    display: inline-block;
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+
+.button:disabled {
+    background-color: #A0CFFF; /* Lighter blue when disabled */
+    cursor: not-allowed;
+}
+
+.button:hover:not(:disabled) {
+    background-color: #1A91DA; /* Slightly darker blue on hover */
+}
+
+.icon {
+    vertical-align: middle;
+    margin-top: 1px;
+}
+
+.button.default {
+    background-color: var(--color-accent-blue);
+    color: #FFFFFF;
+}
+
+.button.red {
+    background-color: var(--color-accent-red);
+    color: #FFFFFF;
+}
+
+.button.green {
+    background-color: var(--color-accent-green);
+    color: #FFFFFF;
+}

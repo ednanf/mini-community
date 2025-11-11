@@ -1,0 +1,17 @@
+.commentForm {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    max-width: 400px;
+}
+
+.separator {
+    width: 80%;
+    max-width: 400px;
+    height: 1px;
+    background-color: var(--color-border);
+    margin: 1rem 0;
+}
+
