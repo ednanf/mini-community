@@ -70,14 +70,21 @@ const patchUser = async (
     try {
         const { userId } = req.user;
         const updatePayload: UserPatchBody = req.body;
-        if (Object.keys(updatePayload).length === 0) {
+        const allowedFields = ['nickname', 'email', 'bio', 'avatarUrl'];
+        const safeUpdatePayload: Partial<UserPatchBody> = {};
+        for (const key of allowedFields) {
+            if (Object.prototype.hasOwnProperty.call(updatePayload, key)) {
+                safeUpdatePayload[key] = updatePayload[key];
+            }
+        }
+        if (Object.keys(safeUpdatePayload).length === 0) {
             next(new BadRequestError('No valid update data provided.'));
             return;
         }
 
         const patchedUser = await User.findByIdAndUpdate(
             { _id: userId },
-            updatePayload,
+            safeUpdatePayload,
             {
                 new: true,
                 runValidators: true,
