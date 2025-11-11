@@ -1,3 +1,6 @@
+<img width="134" height="134" alt="apple-touch-icon" src="https://github.com/user-attachments/assets/ae767c03-fef4-4af4-be90-87848e3b4b97" />
+
+
 # Mini Community
 
 ## Notes
