@@ -63,6 +63,7 @@ If you are curious about the backend structure, a detailed report was generated 
 
 ### Backend
 
+```text
 mini-community (backend)
 ├── bcryptjs ^3.0.2
 ├── cors ^2.8.5
@@ -90,9 +91,11 @@ mini-community (backend)
 ├── tsx ^4.20.6 (dev)
 ├── typescript-eslint ^8.45.0 (dev)
 └── typescript ^5.9.3 (dev)
+```
 
 ### Frontend
 
+```text
 mini-community (frontend)
 ├── axios ^1.12.2
 ├── react ^19.1.1
@@ -115,6 +118,7 @@ mini-community (frontend)
 ├── typescript-eslint ^8.45.0 (dev)
 ├── vite ^7.1.11 (dev)
 └── vite-plugin-pwa ^1.1.0 (dev)
+```
 
 ## Legal
 
