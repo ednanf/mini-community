@@ -70,7 +70,12 @@ const patchUser = async (
     try {
         const { userId } = req.user;
         const updatePayload: UserPatchBody = req.body;
-        const allowedFields = ['nickname', 'email', 'bio', 'avatarUrl'];
+        const allowedFields: (keyof UserPatchBody)[] = [
+            'nickname',
+            'email',
+            'bio',
+            'avatarUrl',
+        ];
         const safeUpdatePayload: Partial<UserPatchBody> = {};
         for (const key of allowedFields) {
             if (Object.prototype.hasOwnProperty.call(updatePayload, key)) {
@@ -91,7 +96,8 @@ const patchUser = async (
             },
         );
         if (!patchedUser) {
-            new NotFoundError('User was not found.');
+            next(new NotFoundError('User was not found.'));
+            return;
         }
 
         const response: ApiResponse<UserPatchSuccess> = {
@@ -121,7 +127,7 @@ const deleteUser = async (
 
         const userToBeDeleted = await User.findById(userId);
         if (!userToBeDeleted) {
-            new NotFoundError('User was not found.');
+            next(new NotFoundError('User was not found.'));
             return;
         }
 
@@ -348,7 +354,8 @@ const isFollowing = async (
         }
 
         const isFollowing = otherUser.followers.some(
-            (followerId: string) => followerId.toString() === currentUserId,
+            (followerId: Types.ObjectId) =>
+                followerId.toString() === currentUserId,
         );
 
         const response: ApiResponse<UserIsFollowingSuccess> = {
