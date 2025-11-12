@@ -24,13 +24,14 @@ allowing users to edit posts or upload images for their profiles.
 
 The backend endpoints include more functionalities than the frontend currently utilizes, allowing for future expansions.
 
-If you are curious about the backend structure, a detailed report was generated using copilot, and it can be found in
-/docs.
+A detailed report was generated using copilot, and it can be found below.
 
 ## API Specification
 
-- For an in-depth look at the API data flow, please refer to [this report](https://github.com/ednanf/mini-community/blob/master/docs/BACKEND_REPORT.md).
-- See the API documentation at [Scalar](https://registry.scalar.com/@ednan-frizzera-dev-team/apis/mini-community-api/latest).
+- For an in-depth look at the API data flow, please refer
+  to [this report](https://github.com/ednanf/mini-community/blob/master/docs/BACKEND_REPORT.md).
+- See the API documentation
+  at [Scalar](https://registry.scalar.com/@ednan-frizzera-dev-team/apis/mini-community-api/latest).
 
 ## Live Application
 
