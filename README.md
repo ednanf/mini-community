@@ -33,7 +33,7 @@ If you are curious about the backend structure, a detailed report was generated 
 
 ## Live Application
 
-🚀 Under construction...
+[Access it here](https://mini-community.frizzera.dev)
 
 ## Main Technologies
 
