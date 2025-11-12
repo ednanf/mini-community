@@ -29,11 +29,13 @@ If you are curious about the backend structure, a detailed report was generated 
 
 ## API Specification
 
-[See in Scalar](https://registry.scalar.com/@ednan-frizzera-dev-team/apis/mini-community-api/latest)
+📑 [See in Scalar](https://registry.scalar.com/@ednan-frizzera-dev-team/apis/mini-community-api/latest)
 
 ## Live Application
 
-[Access it here](https://mini-community.frizzera.dev)
+🚀 [Live demo](https://mini-community.frizzera.dev)
+
+*Note: First load may take a moment as the backend wakes up on Render's free tier.*
 
 ## Main Technologies
 
