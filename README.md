@@ -29,7 +29,8 @@ If you are curious about the backend structure, a detailed report was generated 
 
 ## API Specification
 
-📑 [See in Scalar](https://registry.scalar.com/@ednan-frizzera-dev-team/apis/mini-community-api/latest)
+- For an in-depth look at the API data flow, please refer to [this report](https://github.com/ednanf/mini-community/blob/master/docs/BACKEND_REPORT.md).
+- See the API documentation at [Scalar](https://registry.scalar.com/@ednan-frizzera-dev-team/apis/mini-community-api/latest).
 
 ## Live Application
 
