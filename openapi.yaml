@@ -1,0 +1,2963 @@
+openapi: 3.0.3
+
+info:
+  title: Mini Community API
+  version: 1.0.0
+  description: |
+    REST API for **Mini Community**, a small social-networking application built with
+    Node.js, Express 5, TypeScript, Mongoose (MongoDB) and Zod.
+
+    The API exposes four resource groups, all mounted under the `/api/v1` prefix:
+
+    | Group      | Base path                | Router                    |
+    | ---------- | ------------------------ | ------------------------- |
+    | Auth       | `/api/v1/auth`           | `authRoutes.ts`           |
+    | Users      | `/api/v1/users`          | `usersRoutes.ts`          |
+    | Posts      | `/api/v1/posts`          | `postsRoutes.ts`          |
+    | Comments   | `/api/v1/posts/{postId}/comments` | `commentsRoutes.ts` (nested) |
+
+    The comments router is **also** mounted a second time at `/api/v1/comments` (legacy
+    top-level mount). Those duplicate routes are documented in the
+    *Comments (Top-Level Mount)* tag.
+
+    ---
+
+    ## Response envelope
+
+    Every response — with the single exception of the rate-limit error (see below) — uses
+    the same envelope:
+
+    ```json
+    {
+      "status": "success",
+      "data": { }
+    }
+    ```
+
+    On failure, `status` is the string `"error"` and `data` carries the details:
+
+    ```json
+    {
+      "status": "error",
+      "data": { "message": "Human readable explanation" }
+    }
+    ```
+
+    Unhandled server errors additionally include a `data.errorId` (UUID) that matches the
+    identifier written to the server log, so a report can be correlated with the logs.
+
+    ### Rate-limit error is a different shape
+
+    The rate limiter is configured with a plain object message, so the `429` response does
+    **not** follow the envelope above:
+
+    ```json
+    { "status": 429, "error": "Too many requests, please try again later." }
+    ```
+
+    ---
+
+    ## Authentication
+
+    Authentication is stateless JWT (HS256). Call `POST /api/v1/auth/register` or
+    `POST /api/v1/auth/login` to obtain a token, then send it on every protected request:
+
+    ```http
+    Authorization: Bearer <token>
+    ```
+
+    The token payload contains only the user id:
+
+    ```json
+    { "userId": "6ad63ae4f5663c55f5529b4b", "iat": 1792424641, "exp": 1795016641 }
+    ```
+
+    Token lifetime is controlled by the `JWT_LIFETIME` environment variable (a `ms`
+    style string such as `30d`, `1h`, `15m`) and defaults to `30d` in the shipped
+    configuration. Because the token is stateless, `POST /api/v1/auth/logout` cannot
+    invalidate it server-side — the client must simply discard the token.
+
+    Endpoints marked as *optional auth* accept the header but never require it. A missing
+    or malformed header is simply ignored, and the request proceeds as anonymous. A
+    **present but invalid** token is also ignored on those endpoints.
+
+    ---
+
+    ## Cursor pagination
+
+    All list endpoints (`GET /posts`, `GET /posts/my-posts`, `GET /posts/feed`,
+    `GET /posts/user/{id}`, `GET /posts/{postId}/comments`, `GET /comments`) are paginated
+    with an opaque cursor:
+
+    * `limit` — number of items per page. Defaults to `20` when omitted. The value is
+      parsed with `parseInt`, so a non-numeric value, `0` or a negative number silently
+      falls back to `20`. **No upper bound is enforced by the server.**
+    * `cursor` — the `_id` of the last item of the previous page (24-character hex
+      ObjectId). The item identified by the cursor is *excluded* from the next page;
+      only strictly older items (`_id < cursor`) are returned.
+
+    The response always contains `nextCursor`:
+
+    * `nextCursor` is a **string** when more pages exist — pass it back as `cursor`.
+    * `nextCursor` is **`null`** when the last page has been reached.
+
+    Results are always sorted by `_id` descending (newest first).
+
+    ---
+
+    ## Rate limiting
+
+    A per-IP limiter allows **300 requests per 15-minute window** (in-memory store).
+    When the quota is exhausted the API answers `429` with the
+    `Retry-After` header. Every response carries the current quota state:
+
+    | Header                    | Meaning                                  |
+    | ------------------------- | ---------------------------------------- |
+    | `X-RateLimit-Limit`       | Requests allowed in the current window   |
+    | `X-RateLimit-Remaining`   | Requests still available in this window  |
+    | `X-RateLimit-Reset`       | Unix timestamp (seconds) when the window resets |
+    | `Retry-After`             | Seconds to wait (only sent with `429`)   |
+
+    ---
+
+    ## Request validation and sanitisation
+
+    * **ObjectIds** — every path parameter that carries a MongoDB id is validated with
+      `mongoose.Types.ObjectId.isValid` before the controller runs. A malformed id yields
+      `400` with `Invalid <param> format`. The only exceptions are the `/users` routes,
+      which are **not** protected by that middleware — sending a malformed id there
+      produces a `500` (Mongoose `CastError`) instead of a `400`.
+    * **Bodies** — request bodies are validated with Zod and the parsed result *replaces*
+      the raw body, so any property that is not part of the schema is silently dropped.
+    * **XSS** — `POST /auth/register`, `POST /auth/login`, `POST /posts`,
+      `POST /posts/{postId}/comments` and `PATCH /users/me` run the body through
+      `express-xss-sanitizer`, which strips HTML tags (and their content) before
+      validation.
+    * **JSON body limit** — request bodies are limited to 100 kB by `express.json()`.
+
+    ---
+
+    ## CORS
+
+    Only the following origins are allowed:
+
+    * `http://localhost:5173`
+    * `http://10.0.0.102:5173`
+    * `https://mini-community.frizzera.dev`
+    * `https://mini-community-ednan.vercel.app`
+
+    Allowed methods are `GET`, `POST`, `PATCH` and `DELETE`. Preflight requests
+    (`OPTIONS`) are answered with `200` and an `Access-Control-Allow-Methods` header
+    listing those four verbs. Requests coming from a non-allowed origin are still
+    executed — they simply do not receive the `Access-Control-Allow-Origin` header, so
+    the browser blocks the response.
+
+    ---
+
+    ## Security headers
+
+    Every response is hardened with `helmet` and includes
+    `Content-Security-Policy`, `Cross-Origin-Opener-Policy: same-origin`,
+    `Cross-Origin-Resource-Policy: same-origin`, `Origin-Agent-Cluster: ?1`,
+    `Referrer-Policy: no-referrer`, `Strict-Transport-Security: max-age=31536000; includeSubDomains`,
+    `X-Content-Type-Options: nosniff`, `X-DNS-Prefetch-Control: off`,
+    `X-Download-Options: noopen`, `X-Frame-Options: SAMEORIGIN` and
+    `X-Permitted-Cross-Domain-Policies: none`.
+
+    ---
+
+    ## Error catalogue
+
+    | Status | Raised when                                                              |
+    | ------ | ------------------------------------------------------------------------- |
+    | `400`  | Malformed ObjectId, failed Zod validation, empty update payload, self-follow / self-unfollow |
+    | `401`  | Missing, malformed, expired or tampered JWT (`UnauthorizedError`) or a user that no longer exists (`UnauthenticatedError`) |
+    | `404`  | Resource does not exist, caller is not the author of the resource, or the route does not exist |
+    | `429`  | Rate limit exceeded (shape differs from the standard envelope)             |
+    | `500`  | Any unhandled error (Mongoose `CastError` / `ValidationError`, duplicate key, …) |
+
+    ### Known quirks
+
+    These are real behaviours of the current implementation and are reflected in the
+    response definitions below.
+
+    1. **Duplicate e-mail / nickname → `500`.** The unique indexes on `email` and
+       `nickname` make MongoDB raise `E11000`. The error handler only recognises that
+       shape when the error exposes `cause.code === 11000`, which Mongoose 8 does not
+       provide, so the dedicated `409 Conflict` branch is currently unreachable and the
+       raw MongoDB message is returned with a `500` status.
+    2. **`GET /users/{id}/following` answers with a `followers` key.** The list of users
+       that the target user follows is returned under the property name `followers`.
+    3. **`POST /auth/register` discards `avatarUrl` and `bio`.** Both properties pass
+       validation but are not persisted — only `nickname`, `email` and `password` are
+       stored. Use `PATCH /users/me` to set them afterwards.
+    4. **`PATCH /users/me` silently ignores `password`.** The field passes Zod
+       validation but is filtered out before the update, so a request whose only
+       property is `password` fails with `No valid update data provided.`
+    5. **Optional properties are omitted, not null.** Mongoose leaves unset paths
+       `undefined`, and `JSON.stringify` drops them — a user without a bio has no `bio`
+       key at all in the response.
+    6. **An invalid `cursor` produces a `500`.** Cursors are converted with
+       `new mongoose.Types.ObjectId(cursor)`, which throws for malformed input.
+    7. **The top-level `/api/v1/comments` mount is a duplicate.** `GET /api/v1/comments`
+       can never return anything (there is no `postId` to filter on) and
+       `POST /api/v1/comments` always answers `404`. Use the nested
+       `/api/v1/posts/{postId}/comments` routes instead.
+    8. **`GET /api/v1/users/me` fails with a `500`.** Only `PATCH /users/me` and
+       `DELETE /users/me` exist; a `GET` on that path is matched by the
+       `GET /users/{id}` route with `id = "me"`, which is not a valid ObjectId, so the
+       request ends in a Mongoose `CastError` (`500`). Use `GET /api/v1/auth/me` to read
+       your own profile.
+  contact:
+    name: Ednan Rogério Frizzera Filho
+    url: https://github.com/ednanf
+  license:
+    name: All Rights Reserved
+    url: https://github.com/ednanf/mini-community/blob/master/LICENSE
+  x-source: backend/src
+
+servers:
+  - url: http://localhost:9000/api/v1
+    description: Local development server (PORT=9000 in backend/.env)
+  - url: http://10.0.0.102:9000/api/v1
+    description: LAN development server used by the Vite dev frontend
+  - url: https://mini-community-9aza.onrender.com/api/v1
+    description: Production server (Render free tier — the first request after an idle period may take a while while the instance wakes up)
+
+tags:
+  - name: Authentication
+    description: Registration, login, logout and current-session inspection.
+  - name: Users
+    description: Profile retrieval and management, plus the follow / unfollow graph.
+  - name: Posts
+    description: Global feed, personalised feed, post authoring and deletion.
+  - name: Comments
+    description: Comments belonging to a post (nested under `/posts/{postId}/comments`).
+  - name: Comments (Top-Level Mount)
+    description: |
+      The comments router is mounted a second time at `/api/v1/comments` in `app.ts`.
+      These routes duplicate the nested ones but behave differently because the
+      `postId` route parameter is missing. They are documented for completeness —
+      prefer the nested routes under `/posts/{postId}/comments`.
+
+externalDocs:
+  description: Project repository and backend source
+  url: https://github.com/ednanf/mini-community
+
+paths:
+  # ==========================================================================
+  # AUTHENTICATION
+  # ==========================================================================
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Register a new user
+      description: |
+        Creates a new user account and immediately returns a signed JWT so the caller
+        can start using the API without logging in.
+
+        **Validation (Zod)**
+
+        | Field      | Rules                                                        |
+        | ---------- | ------------------------------------------------------------ |
+        | `nickname` | required, 3–10 characters                                    |
+        | `email`    | required, valid e-mail address                              |
+        | `password` | required, at least 6 characters                              |
+        | `avatarUrl`| optional, at most 2048 characters                            |
+        | `bio`      | optional, at most 280 characters                             |
+
+        The body is XSS-sanitised before validation and unknown properties are stripped.
+
+        **Storage rules (Mongoose)**
+
+        * `nickname` and `email` are trimmed and lower-cased, so `Alice` is stored as
+          `alice` and the uniqueness indexes are case-insensitive.
+        * `nickname` must be 3–30 characters and `email` at least 5 characters in the
+          database; the Zod limits above are stricter and therefore always win.
+        * `password` is hashed with bcrypt (10 salt rounds) before being stored and is
+          never returned by any endpoint.
+        * `avatarUrl` must be a valid URL (≤ 2048 characters) and `bio` ≤ 280 characters
+          when present in the database.
+
+        **Note:** `avatarUrl` and `bio` are accepted and validated but are **not
+        persisted** by this endpoint — only `nickname`, `email` and `password` are
+        written to the database. Call `PATCH /api/v1/users/me` to set them later.
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegisterRequest'
+            example:
+              nickname: johndoe
+              email: john.doe@example.com
+              password: securePassword123
+              avatarUrl: https://example.com/avatars/johndoe.jpg
+              bio: Software developer passionate about open source
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserRegisterResponse'
+              example:
+                status: success
+                data:
+                  message: User registered successfully.
+                  id: 6ad63ae4f5663c55f5529b4b
+                  nickname: johndoe
+                  email: john.doe@example.com
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWQ2M2FlNGY1NjYzYzU1ZjU1MjljNGIiLCJpYXQiOjE3OTI0MjQ2NDEsImV4cCI6MTc5NTAxNjY0MX0.hUHbrlyiSsuVr7xr8Zj5e6O_RFAQVvc2EXRvDK6pAM8
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Log in to an existing account
+      description: |
+        Authenticates a user with e-mail and password and returns a fresh JWT.
+
+        The response is deliberately identical whether the account does not exist or the
+        password is wrong (`There is an issue with your email or password`), so the
+        endpoint cannot be used to enumerate registered accounts.
+
+        **Validation (Zod)** — `email` must be a valid e-mail address and `password` must
+        be at least 6 characters. A shorter password is rejected with `400` *before* the
+        credentials are checked, so a `400` here does not imply that the account exists.
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+            example:
+              email: john.doe@example.com
+              password: securePassword123
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLoginResponse'
+              example:
+                status: success
+                data:
+                  message: Log in successful. Welcome back!
+                  id: 6ad63ae4f5663c55f5529b4b
+                  nickname: johndoe
+                  email: john.doe@example.com
+                  token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWQ2M2FlNGY1NjYzYzU1ZjU1MjljNGIiLCJpYXQiOjE3OTI0MjQ2NDEsImV4cCI6MTc5NTAxNjY0MX0.hUHbrlyiSsuVr7xr8Zj5e6O_RFAQVvc2EXRvDK6pAM8
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Log out of the application
+      description: |
+        Acknowledges a logout request. **No authentication is required and the token is
+        not invalidated** — JWTs are stateless, so the client is responsible for deleting
+        the token from its storage. The endpoint exists so the client has a single,
+        consistent place to confirm the operation.
+      operationId: logoutUser
+      responses:
+        '200':
+          description: Logout acknowledged
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserLogoutResponse'
+              example:
+                status: success
+                data:
+                  message: Good bye!
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Get the authenticated user's own profile
+      description: |
+        Returns the profile of the user that owns the supplied token.
+
+        The payload is resolved from the database on every call, so it always reflects
+        the current state of the account. `bio` and `avatarUrl` are only present when the
+        user has actually set them.
+      operationId: getCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserMeResponse'
+              example:
+                status: success
+                data:
+                  message: User retrieved successfuly
+                  id: 6ad63ae4f5663c55f5529b4b
+                  nickname: johndoe
+                  bio: Software developer passionate about open source
+                  avatarUrl: https://example.com/avatars/johndoe.jpg
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================================================
+  # USERS
+  # ==========================================================================
+  /users/me:
+    patch:
+      tags:
+        - Users
+      summary: Update the authenticated user's profile
+      description: |
+        Partially updates the profile of the authenticated user. Every property is
+        optional, but **at least one updatable property must be present** — otherwise the
+        request fails with `No valid update data provided.`
+
+        **Updatable properties**
+
+        | Field       | Rules                                                    |
+        | ----------- | -------------------------------------------------------- |
+        | `nickname`  | 3–10 characters, lower-cased on save, must stay unique   |
+        | `email`     | valid e-mail address, must stay unique                   |
+        | `bio`       | at most 280 characters                                   |
+        | `avatarUrl` | at most 2048 characters and a syntactically valid URL    |
+
+        `password` is accepted by the request schema but is **not** part of the update
+        allow-list, so it is silently discarded. A body containing only `password`
+        therefore produces `400 No valid update data provided.`
+
+        The body is XSS-sanitised, validated with Zod and stripped of unknown
+        properties. The Mongoose validators run again on write (`runValidators`), so an
+        `avatarUrl` that is not a valid URL fails the request with a `500`
+        (`Validation failed: avatarUrl: Validator failed for path 'avatarUrl' ...`).
+      operationId: updateCurrentUser
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserPatchRequest'
+            example:
+              nickname: johndoe2
+              bio: Updated bio with new information
+      responses:
+        '200':
+          description: User updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPatchResponse'
+              example:
+                status: success
+                data:
+                  message: User updated successfully.
+                  nickname: johndoe2
+                  email: john.doe@example.com
+                  bio: Updated bio with new information
+                  avatarUrl: https://example.com/avatars/johndoe.jpg
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: |
+            The e-mail or nickname is already taken by another account.
+
+            **Currently unreachable** — see the *Known quirks* section in the API
+            description: duplicate keys surface as `500` because the error handler does
+            not recognise Mongoose 8's error shape.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MongoDuplicateKeyResponse'
+              example:
+                status: error
+                data:
+                  code: 11000
+                  message: Email already exists.
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Users
+      summary: Delete the authenticated user's account
+      description: |
+        Permanently removes the authenticated user and every piece of data attached to
+        them. The following operations run concurrently:
+
+        * all posts authored by the user are deleted;
+        * all comments authored by the user are deleted;
+        * the user is removed from the `followers` list of everybody they followed;
+        * the user is removed from the `following` list of everybody who followed them;
+        * the user document itself is deleted.
+
+        **This operation cannot be undone.**
+      operationId: deleteCurrentUser
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserDeleteResponse'
+              example:
+                status: success
+                data:
+                  message: User deleted successfully.
+                  email: john.doe@example.com
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{id}:
+    get:
+      tags:
+        - Users
+      summary: Get a user profile by id
+      description: |
+        Returns the public profile of a single user together with the follower/following
+        counters.
+
+        Authentication is **optional**: when a valid token is supplied, `isFollowing`
+        reports whether the caller follows that user; for anonymous callers it is always
+        `false`. An invalid token is ignored and the request is served anonymously.
+
+        `bio` and `avatarUrl` are only present when the user has set them.
+
+        **Note:** this route is *not* protected by the ObjectId validation middleware.
+        A malformed `id` produces a `500` (Mongoose `CastError`) rather than a `400`.
+        For the same reason `GET /api/v1/users/me` also fails with a `500` — there is no
+        `GET /users/me` route, so the request is handled as `GET /users/{id}` with
+        `id = "me"`. Use `GET /api/v1/auth/me` to read your own profile.
+      operationId: getUserById
+      security:
+        - BearerAuth: []
+        - {}
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserGetByIdResponse'
+              example:
+                status: success
+                data:
+                  message: User fetched successfully.
+                  id: 6ad63ae4f5663c55f5529b4b
+                  nickname: johndoe
+                  email: john.doe@example.com
+                  bio: Software developer passionate about open source
+                  avatarUrl: https://example.com/avatars/johndoe.jpg
+                  followersCount: 42
+                  followingCount: 17
+                  isFollowing: true
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{id}/followers:
+    get:
+      tags:
+        - Users
+      summary: List the followers of a user
+      description: |
+        Returns the users that follow the target user. Each entry exposes only the public
+        part of the profile: `id`, `email`, and — when set — `bio` and `avatarUrl`.
+        The nickname is not part of the payload.
+
+        Authentication is **required**.
+
+        **Note:** this route is *not* protected by the ObjectId validation middleware, so a
+        malformed `id` produces a `500` instead of a `400`.
+      operationId: getUserFollowers
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Followers retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserFollowersResponse'
+              example:
+                status: success
+                data:
+                  message: User's followers fetched successfully.
+                  followers:
+                    - id: 6ad63ae4f5663c55f5529b4b
+                      email: john.doe@example.com
+                      bio: Software developer passionate about open source
+                      avatarUrl: https://example.com/avatars/johndoe.jpg
+                    - id: 6ad63ae4f5663c55f5529c0d
+                      email: jane.doe@example.com
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{id}/following:
+    get:
+      tags:
+        - Users
+      summary: List the users a user is following
+      description: |
+        Returns the users that the target user follows. Each entry exposes only the
+        public part of the profile: `id`, `email`, and — when set — `bio` and `avatarUrl`.
+
+        Authentication is **required**.
+
+        **Quirk:** although this endpoint returns the *following* list, the property is
+        named **`followers`** in the response body. This is the current server behaviour
+        and is reproduced faithfully in this specification.
+
+        **Note:** this route is *not* protected by the ObjectId validation middleware, so a
+        malformed `id` produces a `500` instead of a `400`.
+      operationId: getUserFollowing
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Following list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserFollowingResponse'
+              example:
+                status: success
+                data:
+                  message: User's following list fetched successfully.
+                  followers:
+                    - id: 6ad63ae4f5663c55f5529c0d
+                      email: jane.doe@example.com
+                      bio: Designer
+                      avatarUrl: https://example.com/avatars/jane.jpg
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/{id}/is-following:
+    get:
+      tags:
+        - Users
+      summary: Check whether the caller follows a user
+      description: |
+        Returns a single boolean telling whether the authenticated user currently follows
+        the target user. It is always `false` when the caller queries their own profile,
+        because following yourself is rejected.
+
+        Authentication is **required**.
+
+        **Note:** this route is *not* protected by the ObjectId validation middleware, so a
+        malformed `id` produces a `500` instead of a `400`.
+      operationId: isFollowingUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: Follow state retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIsFollowingResponse'
+              example:
+                status: success
+                data:
+                  message: Successfully checked if user is following another user.
+                  isFollowing: true
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/follow/{id}:
+    post:
+      tags:
+        - Users
+      summary: Follow a user
+      description: |
+        Makes the authenticated user follow the target user. The follower's `following`
+        array and the followee's `followers` array are updated concurrently.
+
+        The operation is **idempotent**: it uses `$addToSet`, so following the same user
+        twice leaves a single entry in both arrays and still returns `200`.
+
+        Following yourself is rejected with `400`.
+
+        **Note:** this route is *not* protected by the ObjectId validation middleware, so a
+        malformed `id` produces a `500` (Mongoose `CastError`) instead of a `400`.
+      operationId: followUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: User followed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserFollowResponse'
+              example:
+                status: success
+                data:
+                  message: User followed successfully.
+                  followedUser: 6ad63ae4f5663c55f5529c0d
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /users/unfollow/{id}:
+    post:
+      tags:
+        - Users
+      summary: Unfollow a user
+      description: |
+        Removes the target user from the caller's `following` array and removes the
+        caller from the target's `followers` array. Both updates run concurrently.
+
+        The operation is **idempotent**: unfollowing a user that is not followed simply
+        returns `200`.
+
+        Unfollowing yourself is rejected with `400`.
+
+        **Note:** this route is *not* protected by the ObjectId validation middleware, so a
+        malformed `id` produces a `500` (Mongoose `CastError`) instead of a `400`.
+      operationId: unfollowUser
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: User unfollowed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUnfollowResponse'
+              example:
+                status: success
+                data:
+                  message: User unfollowed successfully.
+                  unfollowedUser: 6ad63ae4f5663c55f5529c0d
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================================================
+  # POSTS
+  # ==========================================================================
+  /posts:
+    get:
+      tags:
+        - Posts
+      summary: Get the global feed
+      description: |
+        Returns every post of the community, newest first. **No authentication is
+        required.**
+
+        The list is paginated with the `limit` / `cursor` pair; see the
+        *Cursor pagination* section of the API description.
+      operationId: getPosts
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
+      responses:
+        '200':
+          description: Posts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsListResponse'
+              example:
+                status: success
+                data:
+                  message: Posts retrieved successfully
+                  posts:
+                    - _id: 6ad63ae4f5663c55f5529b55
+                      createdBy:
+                        _id: 6ad63ae4f5663c55f5529b4b
+                        nickname: johndoe
+                      postContent: Just built an amazing API with Node.js and Express!
+                      postComments: []
+                      createdAt: '2026-10-19T15:44:36.554Z'
+                      updatedAt: '2026-10-19T15:44:36.554Z'
+                      __v: 0
+                  nextCursor: 6ad63ae4f5663c55f5529b55
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Posts
+      summary: Create a post
+      description: |
+        Publishes a new post authored by the authenticated user.
+
+        **Validation** — `postContent` is required, must not be empty and must be at most
+        140 characters long. The body is XSS-sanitised and unknown properties are
+        stripped before validation.
+
+        The response contains the freshly created post. Note that `createdBy` is returned
+        as a raw ObjectId string here (it is not populated with the author profile), and
+        that `postComments` is an empty array because the post has no comments yet.
+      operationId: createPost
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostCreateRequest'
+            example:
+              postContent: Just built an amazing API with Node.js and Express!
+      responses:
+        '201':
+          description: Post created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostCreateResponse'
+              example:
+                status: success
+                data:
+                  message: Post created successfully
+                  postContent:
+                    createdBy: 6ad63ae4f5663c55f5529b4b
+                    postContent: Just built an amazing API with Node.js and Express!
+                    postComments: []
+                    _id: 6ad63ae4f5663c55f5529b55
+                    createdAt: '2026-10-19T15:44:36.554Z'
+                    updatedAt: '2026-10-19T15:44:36.554Z'
+                    __v: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/my-posts:
+    get:
+      tags:
+        - Posts
+      summary: Get the authenticated user's own posts
+      description: |
+        Returns only the posts written by the authenticated user, newest first.
+        Authentication is **required**.
+
+        The list is paginated with the `limit` / `cursor` pair.
+      operationId: getMyPosts
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
+      responses:
+        '200':
+          description: Posts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsListResponse'
+              example:
+                status: success
+                data:
+                  message: Your own posts retrieved successfully
+                  posts:
+                    - _id: 6ad63ae4f5663c55f5529b55
+                      createdBy:
+                        _id: 6ad63ae4f5663c55f5529b4b
+                        nickname: johndoe
+                      postContent: Just built an amazing API with Node.js and Express!
+                      postComments: []
+                      createdAt: '2026-10-19T15:44:36.554Z'
+                      updatedAt: '2026-10-19T15:44:36.554Z'
+                      __v: 0
+                  nextCursor: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/feed:
+    get:
+      tags:
+        - Posts
+      summary: Get the personalised feed
+      description: |
+        Returns the posts of the users the authenticated user follows **plus** the
+        authenticated user's own posts, newest first. Authentication is **required**.
+
+        The list is paginated with the `limit` / `cursor` pair.
+      operationId: getFollowedUsersPosts
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
+      responses:
+        '200':
+          description: Feed retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsListResponse'
+              example:
+                status: success
+                data:
+                  message: Your feed posts retrieved successfully
+                  posts:
+                    - _id: 6ad63ae4f5663c55f5529b5e
+                      createdBy:
+                        _id: 6ad63ae4f5663c55f5529c0d
+                        nickname: janedoe
+                      postContent: Nice API, congrats!
+                      postComments: []
+                      createdAt: '2026-10-19T15:45:29.742Z'
+                      updatedAt: '2026-10-19T15:45:29.742Z'
+                      __v: 0
+                  nextCursor: null
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/user/{id}:
+    get:
+      tags:
+        - Posts
+      summary: Get the posts of a specific user
+      description: |
+        Returns every post written by the user identified by `id`, newest first.
+        **No authentication is required.**
+
+        The list is paginated with the `limit` / `cursor` pair. The `id` path parameter
+        is validated as a MongoDB ObjectId, so a malformed value returns `400`.
+      operationId: getPostsByUserId
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
+      responses:
+        '200':
+          description: Posts retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostsListResponse'
+              example:
+                status: success
+                data:
+                  message: Posts by user 6ad63ae4f5663c55f5529b4b retrieved successfully
+                  posts: []
+                  nextCursor: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/{id}:
+    get:
+      tags:
+        - Posts
+      summary: Get a single post with its comments
+      description: |
+        Returns one post together with its comments. **No authentication is required.**
+
+        The author is populated with `nickname` only, and every comment is populated with
+        its content and its author's `nickname`. The populated comments therefore contain
+        only `_id`, `commentContent` and `createdBy` — they do **not** carry
+        `parentPost`, `createdAt` or `updatedAt`.
+      operationId: getPostById
+      parameters:
+        - $ref: '#/components/parameters/PostIdPath'
+      responses:
+        '200':
+          description: Post retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostGetByIdResponse'
+              example:
+                status: success
+                data:
+                  message: Post retrieved successfully
+                  postContent:
+                    _id: 6ad63ae4f5663c55f5529b55
+                    createdBy:
+                      _id: 6ad63ae4f5663c55f5529b4b
+                      nickname: johndoe
+                    postContent: Just built an amazing API with Node.js and Express!
+                    postComments:
+                      - _id: 6ad63ae4f5663c55f5529b9c
+                        createdBy:
+                          _id: 6ad63ae4f5663c55f5529c0d
+                          nickname: janedoe
+                        commentContent: Great post! Thanks for sharing.
+                    createdAt: '2026-10-19T15:44:36.554Z'
+                    updatedAt: '2026-10-19T15:44:43.513Z'
+                    __v: 0
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    delete:
+      tags:
+        - Posts
+      summary: Delete a post
+      description: |
+        Deletes a post. **Only the author of the post can delete it** — the delete is
+        executed with the `{ _id, createdBy }` pair, so a request for somebody else's
+        post matches nothing and answers `404 Post not found or you do not have
+        permission to delete it.`
+
+        Authentication is **required**.
+      operationId: deletePost
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostIdPath'
+      responses:
+        '200':
+          description: Post deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostDeleteResponse'
+              example:
+                status: success
+                data:
+                  message: Post deleted successfully
+                  deletedPostId: 6ad63ae4f5663c55f5529b55
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: |
+            The post does not exist, or it belongs to another user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                data:
+                  message: Post not found or you do not have permission to delete it.
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================================================
+  # COMMENTS (nested under a post)
+  # ==========================================================================
+  /posts/{postId}/comments:
+    get:
+      tags:
+        - Comments
+      summary: List the comments of a post
+      description: |
+        Returns the comments of a post, newest first. **No authentication is required.**
+
+        The list is paginated with the `limit` / `cursor` pair. Each comment carries the
+        populated author (`_id` + `nickname`), the raw `parentPost` ObjectId, the
+        timestamps and the Mongoose version key `__v`.
+      operationId: getComments
+      parameters:
+        - $ref: '#/components/parameters/PostIdPathParam'
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
+      responses:
+        '200':
+          description: Comments retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentsListResponse'
+              example:
+                status: success
+                data:
+                  message: Comments retrieved successfully
+                  comments:
+                    - _id: 6ad63aeb6b20a9f776d24c11
+                      createdBy:
+                        _id: 6ad63aeb6b20a9f776d24c0b
+                        nickname: janedoe
+                      parentPost: 6ad63aeb6b20a9f776d24c0d
+                      commentContent: Great post! Thanks for sharing.
+                      createdAt: '2026-10-19T15:44:43.512Z'
+                      updatedAt: '2026-10-19T15:44:43.512Z'
+                      __v: 0
+                  nextCursor: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Comments
+      summary: Comment on a post
+      description: |
+        Creates a comment on the given post. Authentication is **required**.
+
+        **Validation** — `commentContent` is required, must not be empty and must be at
+        most 140 characters long. The body is XSS-sanitised and unknown properties are
+        stripped before validation.
+
+        After the comment is stored, its id is pushed onto the `postComments` array of the
+        parent post, so the post immediately reflects the new comment.
+
+        The response contains the created comment with `createdBy` and `parentPost` as raw
+        ObjectId strings (they are not populated with the author profile).
+      operationId: createComment
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostIdPathParam'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreateRequest'
+            example:
+              commentContent: Great post! Thanks for sharing.
+      responses:
+        '201':
+          description: Comment created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentCreateResponse'
+              example:
+                status: success
+                data:
+                  message: Comment created successfully
+                  commentContent:
+                    createdBy: 6ad63aeb6b20a9f776d24c0b
+                    parentPost: 6ad63aeb6b20a9f776d24c0d
+                    commentContent: Great post! Thanks for sharing.
+                    _id: 6ad63aeb6b20a9f776d24c11
+                    createdAt: '2026-10-19T15:44:43.512Z'
+                    updatedAt: '2026-10-19T15:44:43.512Z'
+                    __v: 0
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /posts/{postId}/comments/{id}:
+    delete:
+      tags:
+        - Comments
+      summary: Delete a comment
+      description: |
+        Deletes a comment. **Only the author of the comment can delete it** — the delete
+        is executed with the `{ _id, createdBy }` pair, so a request for somebody else's
+        comment matches nothing and answers `404`.
+
+        Authentication is **required**.
+      operationId: deleteComment
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/PostIdPathParam'
+        - $ref: '#/components/parameters/CommentIdPath'
+      responses:
+        '200':
+          description: Comment deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDeleteResponse'
+              example:
+                status: success
+                data:
+                  message: Comment deleted successfully
+                  deletedCommentId: 6ad63aeb6b20a9f776d24c11
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: |
+            The comment does not exist, or it belongs to another user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                data:
+                  message: Comment not found or user not authorized to delete this comment.
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  # ==========================================================================
+  # COMMENTS (duplicate top-level mount)
+  # ==========================================================================
+  /comments:
+    get:
+      tags:
+        - Comments (Top-Level Mount)
+      summary: List comments without a parent post (always empty)
+      description: |
+        Duplicate mount of the comments router at `/api/v1/comments`.
+
+        The handler filters comments by the `postId` route parameter, which does not exist
+        on this mount. The filter therefore matches nothing and the endpoint **always
+        returns an empty list** with `nextCursor: null`. It is documented for
+        completeness — use `GET /posts/{postId}/comments` instead.
+      operationId: getCommentsTopLevel
+      parameters:
+        - $ref: '#/components/parameters/LimitParam'
+        - $ref: '#/components/parameters/CursorParam'
+      responses:
+        '200':
+          description: Always an empty list of comments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentsListResponse'
+              example:
+                status: success
+                data:
+                  message: Comments retrieved successfully
+                  comments: []
+                  nextCursor: null
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+    post:
+      tags:
+        - Comments (Top-Level Mount)
+      summary: Create a comment without a parent post (always fails)
+      description: |
+        Duplicate mount of the comments router at `/api/v1/comments`. The handler requires
+        a `postId` route parameter to attach the comment to a post; because the parameter
+        is missing the request is rejected with `404 Post not found` before anything is
+        written to the database.
+
+        Use `POST /posts/{postId}/comments` instead.
+      operationId: createCommentTopLevel
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CommentCreateRequest'
+            example:
+              commentContent: Great post! Thanks for sharing.
+      responses:
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Always the case — there is no parent post on this mount.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                data:
+                  message: Post not found
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /comments/{id}:
+    delete:
+      tags:
+        - Comments (Top-Level Mount)
+      summary: Delete a comment by id
+      description: |
+        Duplicate mount of the comments router at `/api/v1/comments`. The deletion is
+        performed with the `{ _id, createdBy }` pair, so — exactly like the nested
+        variant — only the author of the comment can delete it.
+
+        The `postId` route parameter is not required by this variant.
+      operationId: deleteCommentTopLevel
+      security:
+        - BearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CommentIdPath'
+      responses:
+        '200':
+          description: Comment deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentDeleteResponse'
+              example:
+                status: success
+                data:
+                  message: Comment deleted successfully
+                  deletedCommentId: 6ad63aeb6b20a9f776d24c11
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: |
+            The comment does not exist, or it belongs to another user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                status: error
+                data:
+                  message: Comment not found or user not authorized to delete this comment.
+        '429':
+          $ref: '#/components/responses/RateLimitExceeded'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT issued by `POST /api/v1/auth/register` or `POST /api/v1/auth/login`.
+
+        Send it as `Authorization: Bearer <token>`. The token is signed with HS256 and
+        carries the `userId` of the authenticated user; its lifetime is defined by the
+        `JWT_LIFETIME` environment variable (`30d` in the shipped configuration).
+
+        **Example**
+
+        ```http
+        Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWQ2M2FlNGY1NjYzYzU1ZjU1MjljNGIiLCJpYXQiOjE3OTI0MjQ2NDEsImV4cCI6MTc5NTAxNjY0MX0.hUHbrlyiSsuVr7xr8Zj5e6O_RFAQVvc2EXRvDK6pAM8
+        ```
+
+  parameters:
+    LimitParam:
+      name: limit
+      in: query
+      required: false
+      description: |
+        Number of items to return. Defaults to `20` when omitted.
+
+        The value is parsed with `parseInt`, therefore a non-numeric value, `0` or a
+        negative number silently falls back to `20`. No upper bound is enforced by the
+        server.
+      schema:
+        type: integer
+        minimum: 1
+        default: 20
+        example: 20
+    CursorParam:
+      name: cursor
+      in: query
+      required: false
+      description: |
+        Opaque pagination cursor — the `nextCursor` value returned by the previous page.
+        It is the `_id` of the last item of that page; the item itself is excluded and
+        only strictly older items are returned.
+
+        A malformed cursor makes the server throw and results in a `500` response.
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+        example: 6ad63ae4f5663c55f5529b55
+    UserIdPath:
+      name: id
+      in: path
+      required: true
+      description: |
+        MongoDB ObjectId of the user.
+
+        **Note:** the `/users` routes do not run the ObjectId validation middleware, so a
+        malformed value produces a `500` (Mongoose `CastError`) instead of a `400`.
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+        example: 6ad63ae4f5663c55f5529b4b
+    PostIdPath:
+      name: id
+      in: path
+      required: true
+      description: MongoDB ObjectId of the post.
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+        example: 6ad63ae4f5663c55f5529b55
+    PostIdPathParam:
+      name: postId
+      in: path
+      required: true
+      description: MongoDB ObjectId of the parent post.
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+        example: 6ad63ae4f5663c55f5529b55
+    CommentIdPath:
+      name: id
+      in: path
+      required: true
+      description: MongoDB ObjectId of the comment.
+      schema:
+        type: string
+        pattern: '^[0-9a-fA-F]{24}$'
+        example: 6ad63aeb6b20a9f776d24c11
+
+  responses:
+    BadRequest:
+      description: |
+        The request was rejected before it reached the controller.
+
+        Possible causes: a malformed ObjectId in the path (`Invalid <param> format`), a
+        failed Zod validation (the messages of every failed rule are joined with `. `),
+        an empty update payload (`No valid update data provided.`) or an attempt to
+        follow/unfollow yourself.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            data:
+              message: Invalid id format
+    ZodValidationError:
+      description: |
+        The request body did not satisfy the Zod schema. The `message` property contains
+        the messages of all failed rules joined by `. `.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            data:
+              message: 'Too small: expected string to have >=3 characters. Invalid email address. Too small: expected string to have >=6 characters'
+    Unauthorized:
+      description: |
+        The request could not be authenticated — the `Authorization` header is missing or
+        malformed, or the token is invalid, expired or tampered with.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            data:
+              message: "Authorization header missing or malformed. Expected format: Bearer 'token'."
+    NotFound:
+      description: The requested resource does not exist.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            data:
+              message: Post not found.
+    RouteNotFound:
+      description: |
+        No route matched the request. The message always contains the requested URL.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            status: error
+            data:
+              message: Not Found - /api/v1/does-not-exist
+    RateLimitExceeded:
+      description: |
+        The client sent more than 300 requests within a 15-minute window.
+
+        **Note:** this response does **not** use the standard envelope — `status` is the
+        numeric HTTP status and the description lives under `error`.
+      headers:
+        Retry-After:
+          description: Number of seconds to wait before retrying.
+          schema:
+            type: integer
+          example: 899
+        X-RateLimit-Limit:
+          description: Number of requests allowed in the current window.
+          schema:
+            type: integer
+          example: 300
+        X-RateLimit-Remaining:
+          description: Number of requests still available in the current window.
+          schema:
+            type: integer
+          example: 0
+        X-RateLimit-Reset:
+          description: Unix timestamp (in seconds) at which the window resets.
+          schema:
+            type: integer
+          example: 1792425611
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/RateLimitErrorResponse'
+          example:
+            status: 429
+            error: Too many requests, please try again later.
+    InternalServerError:
+      description: |
+        An unexpected error occurred. The `errorId` is a UUID that also appears in the
+        server log, so the incident can be correlated.
+
+        Typical causes are a malformed ObjectId on a route that does not validate it
+        (Mongoose `CastError`), a failed Mongoose validator, a duplicate key on the
+        `email` / `nickname` unique indexes, or a malformed `cursor`.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/InternalServerErrorResponse'
+          example:
+            status: error
+            data:
+              message: Cast to ObjectId failed for value "notanid" (type string) at path "_id" for model "User"
+              errorId: 550e8400-e29b-41d4-a716-446655440000
+
+  schemas:
+    # ------------------------------------------------------------------
+    # Envelopes
+    # ------------------------------------------------------------------
+    ErrorResponse:
+      type: object
+      title: Error envelope
+      description: Standard error envelope returned by every endpoint.
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - error
+          description: Always the literal string `error`.
+          example: error
+        data:
+          type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+              description: Human readable description of the failure.
+              example: Post not found.
+      example:
+        status: error
+        data:
+          message: Post not found.
+
+    InternalServerErrorResponse:
+      type: object
+      title: Internal server error envelope
+      description: Error envelope for unhandled server errors, enriched with a tracking id.
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - error
+          example: error
+        data:
+          type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+              description: Description of the failure.
+              example: Internal Server Error
+            errorId:
+              type: string
+              format: uuid
+              description: Unique identifier of the error instance, also written to the server log.
+              example: 550e8400-e29b-41d4-a716-446655440000
+      example:
+        status: error
+        data:
+          message: Internal Server Error
+          errorId: 550e8400-e29b-41d4-a716-446655440000
+
+    RateLimitErrorResponse:
+      type: object
+      title: Rate limit error
+      description: |
+        Rate limit payload. This is the only response that does not follow the standard
+        envelope: `status` is the numeric HTTP status code and the description is
+        provided under `error`.
+      required:
+        - status
+        - error
+      properties:
+        status:
+          type: integer
+          enum:
+            - 429
+          example: 429
+        error:
+          type: string
+          example: Too many requests, please try again later.
+      example:
+        status: 429
+        error: Too many requests, please try again later.
+
+    MongoDuplicateKeyResponse:
+      type: object
+      title: Duplicate key error
+      description: |
+        Envelope for a MongoDB duplicate key error (`E11000`). **Currently unreachable** —
+        see the *Known quirks* section of the API description.
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - error
+          example: error
+        data:
+          type: object
+          required:
+            - code
+            - message
+          properties:
+            code:
+              type: integer
+              description: MongoDB error code.
+              example: 11000
+            message:
+              type: string
+              example: Email already exists.
+      example:
+        status: error
+        data:
+          code: 11000
+          message: Email already exists.
+
+    # ------------------------------------------------------------------
+    # Shared fragments
+    # ------------------------------------------------------------------
+    ObjectId:
+      type: string
+      description: MongoDB ObjectId (24 hexadecimal characters).
+      pattern: '^[0-9a-fA-F]{24}$'
+      example: 6ad63ae4f5663c55f5529b4b
+
+    PopulatedUser:
+      type: object
+      description: |
+        Author reference as returned inside post and comment payloads. Only the id and
+        the nickname are selected.
+      required:
+        - _id
+        - nickname
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        nickname:
+          type: string
+          description: Nickname of the author.
+          example: johndoe
+
+    UserPublic:
+      type: object
+      description: |
+        Public projection of a user, used by the follower and following lists. The
+        nickname is **not** included.
+      required:
+        - id
+        - email
+      properties:
+        id:
+          $ref: '#/components/schemas/ObjectId'
+        email:
+          type: string
+          format: email
+          example: john.doe@example.com
+        avatarUrl:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: Avatar URL. Omitted from the response when the user has none.
+          example: https://example.com/avatars/johndoe.jpg
+        bio:
+          type: string
+          maxLength: 280
+          description: Short biography. Omitted from the response when the user has none.
+          example: Software developer passionate about open source
+      example:
+        id: 6ad63ae4f5663c55f5529b4b
+        email: john.doe@example.com
+        avatarUrl: https://example.com/avatars/johndoe.jpg
+        bio: Software developer passionate about open source
+
+    # ------------------------------------------------------------------
+    # Request bodies
+    # ------------------------------------------------------------------
+    UserRegisterRequest:
+      type: object
+      description: |
+        Registration payload.
+
+        `avatarUrl` and `bio` are accepted by the schema but are **not persisted** by the
+        endpoint — use `PATCH /users/me` to store them.
+      required:
+        - nickname
+        - email
+        - password
+      properties:
+        nickname:
+          type: string
+          minLength: 3
+          maxLength: 10
+          description: |
+            Unique handle of the account. Trimmed and lower-cased before it is stored, so
+            `JohnDoe` becomes `johndoe`.
+          example: johndoe
+        email:
+          type: string
+          format: email
+          minLength: 5
+          description: Unique e-mail address. Trimmed and lower-cased before it is stored.
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          description: Account password. Stored as a bcrypt hash (10 salt rounds).
+          example: securePassword123
+        avatarUrl:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: |
+            URL of the avatar image. Validated but currently discarded by the endpoint.
+          example: https://example.com/avatars/johndoe.jpg
+        bio:
+          type: string
+          maxLength: 280
+          description: |
+            Short biography. Validated but currently discarded by the endpoint.
+          example: Software developer passionate about open source
+      example:
+        nickname: johndoe
+        email: john.doe@example.com
+        password: securePassword123
+        avatarUrl: https://example.com/avatars/johndoe.jpg
+        bio: Software developer passionate about open source
+
+    UserLoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          description: Registered e-mail address.
+          example: john.doe@example.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          description: Account password.
+          example: securePassword123
+      example:
+        email: john.doe@example.com
+        password: securePassword123
+
+    UserPatchRequest:
+      type: object
+      description: |
+        Partial profile update. At least one updatable property must be present.
+
+        `password` is accepted by the request schema but silently discarded by the
+        server — it is not part of the update allow-list.
+      properties:
+        nickname:
+          type: string
+          minLength: 3
+          maxLength: 10
+          description: New nickname. Lower-cased and must remain unique.
+          example: johndoe2
+        email:
+          type: string
+          format: email
+          description: New e-mail address. Must remain unique.
+          example: john.updated@example.com
+        password:
+          type: string
+          format: password
+          minLength: 6
+          description: Accepted by the schema but **ignored** by the server.
+          example: newSecurePassword456
+        avatarUrl:
+          type: string
+          format: uri
+          maxLength: 2048
+          description: New avatar URL. Must be a syntactically valid URL.
+          example: https://example.com/avatars/johndoe-new.jpg
+        bio:
+          type: string
+          maxLength: 280
+          description: New biography.
+          example: Updated bio with new information
+      example:
+        nickname: johndoe2
+        bio: Updated bio with new information
+
+    PostCreateRequest:
+      type: object
+      required:
+        - postContent
+      properties:
+        postContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: The body of the post. XSS-sanitised before validation.
+          example: Just built an amazing API with Node.js and Express!
+      example:
+        postContent: Just built an amazing API with Node.js and Express!
+
+    CommentCreateRequest:
+      type: object
+      required:
+        - commentContent
+      properties:
+        commentContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          description: The body of the comment. XSS-sanitised before validation.
+          example: Great post! Thanks for sharing.
+      example:
+        commentContent: Great post! Thanks for sharing.
+
+    # ------------------------------------------------------------------
+    # Authentication responses
+    # ------------------------------------------------------------------
+    UserRegisterResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - id
+            - nickname
+            - email
+            - token
+          properties:
+            message:
+              type: string
+              example: User registered successfully.
+            id:
+              $ref: '#/components/schemas/ObjectId'
+            nickname:
+              type: string
+              example: johndoe
+            email:
+              type: string
+              format: email
+              example: john.doe@example.com
+            token:
+              type: string
+              description: JWT to use in the `Authorization` header.
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWQ2M2FlNGY1NjYzYzU1ZjU1MjljNGIiLCJpYXQiOjE3OTI0MjQ2NDEsImV4cCI6MTc5NTAxNjY0MX0.hUHbrlyiSsuVr7xr8Zj5e6O_RFAQVvc2EXRvDK6pAM8
+      example:
+        status: success
+        data:
+          message: User registered successfully.
+          id: 6ad63ae4f5663c55f5529b4b
+          nickname: johndoe
+          email: john.doe@example.com
+          token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWQ2M2FlNGY1NjYzYzU1ZjU1MjljNGIiLCJpYXQiOjE3OTI0MjQ2NDEsImV4cCI6MTc5NTAxNjY0MX0.hUHbrlyiSsuVr7xr8Zj5e6O_RFAQVvc2EXRvDK6pAM8
+
+    UserLoginResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - id
+            - nickname
+            - email
+            - token
+          properties:
+            message:
+              type: string
+              example: Log in successful. Welcome back!
+            id:
+              $ref: '#/components/schemas/ObjectId'
+            nickname:
+              type: string
+              example: johndoe
+            email:
+              type: string
+              format: email
+              example: john.doe@example.com
+            token:
+              type: string
+              description: JWT to use in the `Authorization` header.
+              example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWQ2M2FlNGY1NjYzYzU1ZjU1MjljNGIiLCJpYXQiOjE3OTI0MjQ2NDEsImV4cCI6MTc5NTAxNjY0MX0.hUHbrlyiSsuVr7xr8Zj5e6O_RFAQVvc2EXRvDK6pAM8
+      example:
+        status: success
+        data:
+          message: Log in successful. Welcome back!
+          id: 6ad63ae4f5663c55f5529b4b
+          nickname: johndoe
+          email: john.doe@example.com
+          token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2YWQ2M2FlNGY1NjYzYzU1ZjU1MjljNGIiLCJpYXQiOjE3OTI0MjQ2NDEsImV4cCI6MTc5NTAxNjY0MX0.hUHbrlyiSsuVr7xr8Zj5e6O_RFAQVvc2EXRvDK6pAM8
+
+    UserLogoutResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+          properties:
+            message:
+              type: string
+              example: Good bye!
+      example:
+        status: success
+        data:
+          message: Good bye!
+
+    UserMeResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - id
+          properties:
+            message:
+              type: string
+              example: User retrieved successfuly
+            id:
+              $ref: '#/components/schemas/ObjectId'
+            nickname:
+              type: string
+              description: Nickname of the authenticated user.
+              example: johndoe
+            bio:
+              type: string
+              maxLength: 280
+              description: Biography. Omitted from the response when the user has none.
+              example: Software developer passionate about open source
+            avatarUrl:
+              type: string
+              format: uri
+              maxLength: 2048
+              description: Avatar URL. Omitted from the response when the user has none.
+              example: https://example.com/avatars/johndoe.jpg
+      example:
+        status: success
+        data:
+          message: User retrieved successfuly
+          id: 6ad63ae4f5663c55f5529b4b
+          nickname: johndoe
+          bio: Software developer passionate about open source
+          avatarUrl: https://example.com/avatars/johndoe.jpg
+
+    # ------------------------------------------------------------------
+    # User responses
+    # ------------------------------------------------------------------
+    UserGetByIdResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - id
+            - nickname
+            - email
+            - followersCount
+            - followingCount
+            - isFollowing
+          properties:
+            message:
+              type: string
+              example: User fetched successfully.
+            id:
+              $ref: '#/components/schemas/ObjectId'
+            nickname:
+              type: string
+              example: johndoe
+            email:
+              type: string
+              format: email
+              example: john.doe@example.com
+            bio:
+              type: string
+              maxLength: 280
+              description: Biography. Omitted from the response when the user has none.
+              example: Software developer passionate about open source
+            avatarUrl:
+              type: string
+              format: uri
+              maxLength: 2048
+              description: Avatar URL. Omitted from the response when the user has none.
+              example: https://example.com/avatars/johndoe.jpg
+            followersCount:
+              type: integer
+              description: Number of users following this user.
+              example: 42
+            followingCount:
+              type: integer
+              description: Number of users this user is following.
+              example: 17
+            isFollowing:
+              type: boolean
+              description: |
+                Whether the authenticated caller follows this user. Always `false` for
+                anonymous callers.
+              example: true
+      example:
+        status: success
+        data:
+          message: User fetched successfully.
+          id: 6ad63ae4f5663c55f5529b4b
+          nickname: johndoe
+          email: john.doe@example.com
+          bio: Software developer passionate about open source
+          avatarUrl: https://example.com/avatars/johndoe.jpg
+          followersCount: 42
+          followingCount: 17
+          isFollowing: true
+
+    UserPatchResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - nickname
+            - email
+          properties:
+            message:
+              type: string
+              example: User updated successfully.
+            nickname:
+              type: string
+              example: johndoe2
+            email:
+              type: string
+              format: email
+              example: john.doe@example.com
+            bio:
+              type: string
+              maxLength: 280
+              description: Biography. Omitted from the response when the user has none.
+              example: Updated bio with new information
+            avatarUrl:
+              type: string
+              format: uri
+              maxLength: 2048
+              description: Avatar URL. Omitted from the response when the user has none.
+              example: https://example.com/avatars/johndoe-new.jpg
+      example:
+        status: success
+        data:
+          message: User updated successfully.
+          nickname: johndoe2
+          email: john.doe@example.com
+          bio: Updated bio with new information
+          avatarUrl: https://example.com/avatars/johndoe-new.jpg
+
+    UserDeleteResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - email
+          properties:
+            message:
+              type: string
+              example: User deleted successfully.
+            email:
+              type: string
+              format: email
+              description: E-mail address of the account that was removed.
+              example: john.doe@example.com
+      example:
+        status: success
+        data:
+          message: User deleted successfully.
+          email: john.doe@example.com
+
+    UserFollowersResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - followers
+          properties:
+            message:
+              type: string
+              example: "User's followers fetched successfully."
+            followers:
+              type: array
+              description: The users that follow the requested user.
+              items:
+                $ref: '#/components/schemas/UserPublic'
+      example:
+        status: success
+        data:
+          message: "User's followers fetched successfully."
+          followers:
+            - id: 6ad63ae4f5663c55f5529b4b
+              email: john.doe@example.com
+              bio: Software developer passionate about open source
+              avatarUrl: https://example.com/avatars/johndoe.jpg
+
+    UserFollowingResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - followers
+          properties:
+            message:
+              type: string
+              example: "User's following list fetched successfully."
+            followers:
+              type: array
+              description: |
+                The users that the requested user is following.
+
+                **Quirk:** the property is named `followers` even though it contains the
+                following list.
+              items:
+                $ref: '#/components/schemas/UserPublic'
+      example:
+        status: success
+        data:
+          message: "User's following list fetched successfully."
+          followers:
+            - id: 6ad63ae4f5663c55f5529c0d
+              email: jane.doe@example.com
+              bio: Designer
+              avatarUrl: https://example.com/avatars/jane.jpg
+
+    UserFollowResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - followedUser
+          properties:
+            message:
+              type: string
+              example: User followed successfully.
+            followedUser:
+              $ref: '#/components/schemas/ObjectId'
+      example:
+        status: success
+        data:
+          message: User followed successfully.
+          followedUser: 6ad63ae4f5663c55f5529c0d
+
+    UserUnfollowResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - unfollowedUser
+          properties:
+            message:
+              type: string
+              example: User unfollowed successfully.
+            unfollowedUser:
+              $ref: '#/components/schemas/ObjectId'
+      example:
+        status: success
+        data:
+          message: User unfollowed successfully.
+          unfollowedUser: 6ad63ae4f5663c55f5529c0d
+
+    UserIsFollowingResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - isFollowing
+          properties:
+            message:
+              type: string
+              example: Successfully checked if user is following another user.
+            isFollowing:
+              type: boolean
+              description: Whether the authenticated caller follows the requested user.
+              example: true
+      example:
+        status: success
+        data:
+          message: Successfully checked if user is following another user.
+          isFollowing: true
+
+    # ------------------------------------------------------------------
+    # Post schemas
+    # ------------------------------------------------------------------
+    Post:
+      type: object
+      description: |
+        A post as returned by the list endpoints (`GET /posts`, `GET /posts/my-posts`,
+        `GET /posts/feed`, `GET /posts/user/{id}`).
+
+        The author is populated with its id and nickname, and `postComments` holds the
+        **ids** of the comments — the comments themselves are not embedded in list
+        responses.
+      required:
+        - _id
+        - createdBy
+        - postContent
+        - postComments
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        createdBy:
+          $ref: '#/components/schemas/PopulatedUser'
+        postContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          example: Just built an amazing API with Node.js and Express!
+        postComments:
+          type: array
+          description: Ids of the comments attached to this post.
+          items:
+            $ref: '#/components/schemas/ObjectId'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-10-19T15:44:36.554Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-10-19T15:44:36.554Z'
+        __v:
+          type: integer
+          description: Mongoose document version key.
+          example: 0
+      example:
+        _id: 6ad63ae4f5663c55f5529b55
+        createdBy:
+          _id: 6ad63ae4f5663c55f5529b4b
+          nickname: johndoe
+        postContent: Just built an amazing API with Node.js and Express!
+        postComments: []
+        createdAt: '2026-10-19T15:44:36.554Z'
+        updatedAt: '2026-10-19T15:44:36.554Z'
+        __v: 0
+
+    PostCreated:
+      type: object
+      description: |
+        The post as returned by `POST /posts`.
+
+        `createdBy` is the **raw ObjectId string** of the author — the author profile is
+        not populated on this route — and `postComments` is always an empty array because
+        the post has just been created.
+      required:
+        - _id
+        - createdBy
+        - postContent
+        - postComments
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        createdBy:
+          allOf:
+            - $ref: '#/components/schemas/ObjectId'
+          description: ObjectId of the author (not populated on this route).
+        postContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          example: Just built an amazing API with Node.js and Express!
+        postComments:
+          type: array
+          description: Always empty on creation.
+          items:
+            $ref: '#/components/schemas/ObjectId'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-10-19T15:44:36.554Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-10-19T15:44:36.554Z'
+        __v:
+          type: integer
+          description: Mongoose document version key.
+          example: 0
+      example:
+        createdBy: 6ad63ae4f5663c55f5529b4b
+        postContent: Just built an amazing API with Node.js and Express!
+        postComments: []
+        _id: 6ad63ae4f5663c55f5529b55
+        createdAt: '2026-10-19T15:44:36.554Z'
+        updatedAt: '2026-10-19T15:44:36.554Z'
+        __v: 0
+
+    PopulatedComment:
+      type: object
+      description: |
+        A comment embedded in the payload of `GET /posts/{id}`. Only `commentContent` and
+        `createdBy` are selected, so the object carries no `parentPost` and no
+        timestamps.
+      required:
+        - _id
+        - commentContent
+        - createdBy
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        createdBy:
+          $ref: '#/components/schemas/PopulatedUser'
+        commentContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          example: Great post! Thanks for sharing.
+      example:
+        _id: 6ad63ae4f5663c55f5529b9c
+        createdBy:
+          _id: 6ad63ae4f5663c55f5529c0d
+          nickname: janedoe
+        commentContent: Great post! Thanks for sharing.
+
+    PostWithComments:
+      type: object
+      description: A post with its comments fully populated, as returned by `GET /posts/{id}`.
+      required:
+        - _id
+        - createdBy
+        - postContent
+        - postComments
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        createdBy:
+          $ref: '#/components/schemas/PopulatedUser'
+        postContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          example: Just built an amazing API with Node.js and Express!
+        postComments:
+          type: array
+          description: The comments of the post, populated.
+          items:
+            $ref: '#/components/schemas/PopulatedComment'
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-10-19T15:44:36.554Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-10-19T15:44:43.513Z'
+        __v:
+          type: integer
+          description: Mongoose document version key.
+          example: 0
+      example:
+        _id: 6ad63ae4f5663c55f5529b55
+        createdBy:
+          _id: 6ad63ae4f5663c55f5529b4b
+          nickname: johndoe
+        postContent: Just built an amazing API with Node.js and Express!
+        postComments:
+          - _id: 6ad63ae4f5663c55f5529b9c
+            createdBy:
+              _id: 6ad63ae4f5663c55f5529c0d
+              nickname: janedoe
+            commentContent: Great post! Thanks for sharing.
+        createdAt: '2026-10-19T15:44:36.554Z'
+        updatedAt: '2026-10-19T15:44:43.513Z'
+        __v: 0
+
+    # ------------------------------------------------------------------
+    # Comment schemas
+    # ------------------------------------------------------------------
+    Comment:
+      type: object
+      description: A comment as returned by the list endpoints.
+      required:
+        - _id
+        - createdBy
+        - parentPost
+        - commentContent
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        createdBy:
+          $ref: '#/components/schemas/PopulatedUser'
+        parentPost:
+          $ref: '#/components/schemas/ObjectId'
+        commentContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          example: Great post! Thanks for sharing.
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-10-19T15:44:43.512Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-10-19T15:44:43.512Z'
+        __v:
+          type: integer
+          description: Mongoose document version key.
+          example: 0
+      example:
+        _id: 6ad63aeb6b20a9f776d24c11
+        createdBy:
+          _id: 6ad63aeb6b20a9f776d24c0b
+          nickname: janedoe
+        parentPost: 6ad63aeb6b20a9f776d24c0d
+        commentContent: Great post! Thanks for sharing.
+        createdAt: '2026-10-19T15:44:43.512Z'
+        updatedAt: '2026-10-19T15:44:43.512Z'
+        __v: 0
+
+    CommentCreated:
+      type: object
+      description: |
+        The comment as returned by `POST /posts/{postId}/comments`. `createdBy` and
+        `parentPost` are raw ObjectId strings — the author profile is not populated on
+        this route.
+      required:
+        - _id
+        - createdBy
+        - parentPost
+        - commentContent
+        - createdAt
+        - updatedAt
+      properties:
+        _id:
+          $ref: '#/components/schemas/ObjectId'
+        createdBy:
+          allOf:
+            - $ref: '#/components/schemas/ObjectId'
+          description: ObjectId of the author (not populated on this route).
+        parentPost:
+          allOf:
+            - $ref: '#/components/schemas/ObjectId'
+          description: ObjectId of the parent post.
+        commentContent:
+          type: string
+          minLength: 1
+          maxLength: 140
+          example: Great post! Thanks for sharing.
+        createdAt:
+          type: string
+          format: date-time
+          example: '2026-10-19T15:44:43.512Z'
+        updatedAt:
+          type: string
+          format: date-time
+          example: '2026-10-19T15:44:43.512Z'
+        __v:
+          type: integer
+          description: Mongoose document version key.
+          example: 0
+      example:
+        createdBy: 6ad63aeb6b20a9f776d24c0b
+        parentPost: 6ad63aeb6b20a9f776d24c0d
+        commentContent: Great post! Thanks for sharing.
+        _id: 6ad63aeb6b20a9f776d24c11
+        createdAt: '2026-10-19T15:44:43.512Z'
+        updatedAt: '2026-10-19T15:44:43.512Z'
+        __v: 0
+
+    # ------------------------------------------------------------------
+    # List / action responses
+    # ------------------------------------------------------------------
+    PostsListResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - posts
+            - nextCursor
+          properties:
+            message:
+              type: string
+              example: Posts retrieved successfully
+            posts:
+              type: array
+              items:
+                $ref: '#/components/schemas/Post'
+            nextCursor:
+              type: string
+              nullable: true
+              description: |
+                Cursor of the next page. `null` when the last page has been reached.
+              example: 6ad63ae4f5663c55f5529b55
+      example:
+        status: success
+        data:
+          message: Posts retrieved successfully
+          posts: []
+          nextCursor: null
+
+    PostCreateResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - postContent
+          properties:
+            message:
+              type: string
+              example: Post created successfully
+            postContent:
+              $ref: '#/components/schemas/PostCreated'
+      example:
+        status: success
+        data:
+          message: Post created successfully
+          postContent:
+            createdBy: 6ad63ae4f5663c55f5529b4b
+            postContent: Just built an amazing API with Node.js and Express!
+            postComments: []
+            _id: 6ad63ae4f5663c55f5529b55
+            createdAt: '2026-10-19T15:44:36.554Z'
+            updatedAt: '2026-10-19T15:44:36.554Z'
+            __v: 0
+
+    PostGetByIdResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - postContent
+          properties:
+            message:
+              type: string
+              example: Post retrieved successfully
+            postContent:
+              $ref: '#/components/schemas/PostWithComments'
+      example:
+        status: success
+        data:
+          message: Post retrieved successfully
+          postContent:
+            _id: 6ad63ae4f5663c55f5529b55
+            createdBy:
+              _id: 6ad63ae4f5663c55f5529b4b
+              nickname: johndoe
+            postContent: Just built an amazing API with Node.js and Express!
+            postComments: []
+            createdAt: '2026-10-19T15:44:36.554Z'
+            updatedAt: '2026-10-19T15:44:36.554Z'
+            __v: 0
+
+    PostDeleteResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - deletedPostId
+          properties:
+            message:
+              type: string
+              example: Post deleted successfully
+            deletedPostId:
+              $ref: '#/components/schemas/ObjectId'
+      example:
+        status: success
+        data:
+          message: Post deleted successfully
+          deletedPostId: 6ad63ae4f5663c55f5529b55
+
+    CommentsListResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - comments
+            - nextCursor
+          properties:
+            message:
+              type: string
+              example: Comments retrieved successfully
+            comments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Comment'
+            nextCursor:
+              type: string
+              nullable: true
+              description: |
+                Cursor of the next page. `null` when the last page has been reached.
+              example: 6ad63aeb6b20a9f776d24c11
+      example:
+        status: success
+        data:
+          message: Comments retrieved successfully
+          comments: []
+          nextCursor: null
+
+    CommentCreateResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - commentContent
+          properties:
+            message:
+              type: string
+              example: Comment created successfully
+            commentContent:
+              $ref: '#/components/schemas/CommentCreated'
+      example:
+        status: success
+        data:
+          message: Comment created successfully
+          commentContent:
+            createdBy: 6ad63aeb6b20a9f776d24c0b
+            parentPost: 6ad63aeb6b20a9f776d24c0d
+            commentContent: Great post! Thanks for sharing.
+            _id: 6ad63aeb6b20a9f776d24c11
+            createdAt: '2026-10-19T15:44:43.512Z'
+            updatedAt: '2026-10-19T15:44:43.512Z'
+            __v: 0
+
+    CommentDeleteResponse:
+      type: object
+      required:
+        - status
+        - data
+      properties:
+        status:
+          type: string
+          enum:
+            - success
+          example: success
+        data:
+          type: object
+          required:
+            - message
+            - deletedCommentId
+          properties:
+            message:
+              type: string
+              example: Comment deleted successfully
+            deletedCommentId:
+              $ref: '#/components/schemas/ObjectId'
+      example:
+        status: success
+        data:
+          message: Comment deleted successfully
+          deletedCommentId: 6ad63aeb6b20a9f776d24c11
