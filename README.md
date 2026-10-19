@@ -31,13 +31,13 @@ A detailed report was generated using copilot, and it can be found below.
 - For an in-depth look at the API data flow, please refer
   to [this report](https://github.com/ednanf/mini-community/blob/master/docs/BACKEND_REPORT.md).
 - See the API documentation
-  at [Scalar](https://registry.scalar.com/@ednan-frizzera-dev-team/apis/mini-community-api/latest).
+  at [Zudoku](https://docs.frizzera.dev/api/mini-community).
 
 ## Live Application
 
 🚀 [Live demo](https://mini-community.frizzera.dev)
 
-*Note: First load may take a moment as the backend wakes up on Render's free tier.*
+_Note: First load may take a moment as the backend wakes up on Render's free tier._
 
 ## Main Technologies
 
